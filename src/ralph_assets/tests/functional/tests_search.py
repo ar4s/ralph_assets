@@ -559,46 +559,29 @@ class TestSearchProductionUseDateFields(TestCase):
 class TestSearchLicences(TestCase):
     def setUp(self):
         self.client = login_as_su()
-        self.base_url = reverse('licence_list')
+        self.licence1 = LicenceFactory(niw='123-456-789')
+        self.licence2 = LicenceFactory(niw='456-123-789')
+        self.licence3 = LicenceFactory(niw='896-456-123')
+        self.licence4 = LicenceFactory(niw='UNIQUE-NIW')
 
-        self.first_licence = LicenceFactory(
-            niw='654-999-321',
-        )
-
-        self.second_licence = LicenceFactory(
-            niw='321-654-789',
-        )
-
-        self.third_licence = LicenceFactory(
-            niw='321-789-654',
-        )
-        self.fourth_licence = LicenceFactory(
-            niw='MY-UNIQUE-NIW',
-        )
-
-    def test_niw_contains(self):
+    def test_niw_contain(self):
+        url = reverse('licence_list')
         test_data = (
             TestData(
-                input='654',
-                expected=[
-                    self.first_licence, self.second_licence,
-                    self.third_licence,
-                ],
+                input='456',
+                expected=[self.licence1, self.licence2, self.licence3],
             ),
             TestData(
-                input='321',
-                expected=[
-                    self.first_licence, self.second_licence,
-                    self.third_licence,
-                ],
+                input='123',
+                expected=[self.licence1, self.licence2, self.licence3],
             ),
             TestData(
-                input='54-9',
-                expected=[self.first_licence],
+                input='6-1',
+                expected=[self.licence2, self.licence3],
             ),
             TestData(
-                input='1-65',
-                expected=[self.second_licence],
+                input='896',
+                expected=[self.licence3],
             ),
             TestData(
                 input='404',
