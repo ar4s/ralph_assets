@@ -559,13 +559,13 @@ class TestSearchProductionUseDateFields(TestCase):
 class TestSearchLicences(TestCase):
     def setUp(self):
         self.client = login_as_su()
+        self.base_url = reverse('licence_list')
         self.licence1 = LicenceFactory(niw='123-456-789')
         self.licence2 = LicenceFactory(niw='456-123-789')
         self.licence3 = LicenceFactory(niw='896-456-123')
         self.licence4 = LicenceFactory(niw='UNIQUE-NIW')
 
     def test_niw_contain(self):
-        url = reverse('licence_list')
         test_data = (
             TestData(
                 input='456',
