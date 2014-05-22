@@ -8,22 +8,20 @@ from __future__ import unicode_literals
 from factory import (
     SubFactory,
     Sequence,
-    post_generation
+    post_generation,
 )
 from factory.django import DjangoModelFactory as Factory
 from random import randint
 from uuid import uuid1
 
-from ralph_assets.models_assets import (
-    AssetType,
-)
+from ralph_assets.models_assets import AssetType
 from ralph_assets.models_sam import (
     Licence,
     LicenceType,
     SoftwareCategory,
 )
 from ralph_assets.tests.utils import UserFactory
-from ralph_assets.tests.utils.assets import AssetFactory
+from ralph_assets.tests.utils.assets import AssetFactory, ServiceFactory
 
 
 class LicenceTypeFactory(Factory):
@@ -54,8 +52,10 @@ class LicenceFactory(Factory):
     accounting_id = ''
     asset_type = AssetType.back_office
     provider = ''
+    remarks = ''
     software_category = SubFactory(SoftwareCategoryFactory)
     licence_type = SubFactory(LicenceTypeFactory)
+    service_name = SubFactory(ServiceFactory)
 
     @post_generation
     def users(self, create, extracted, **kwargs):
