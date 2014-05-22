@@ -6,10 +6,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from django.test import TestCase
+from django.core.urlresolvers import reverse
 
 import datetime
 
 from ralph_assets.tests.util import create_asset, create_model
+from ralph_assets.tests.utils import TestData
+from ralph_assets.tests.utils.sam import LicenceFactory
 from ralph_assets.models_assets import AssetStatus
 from ralph.ui.tests.global_utils import login_as_su
 
@@ -551,3 +554,68 @@ class TestSearchProductionUseDateFields(TestCase):
 
         rows_from_table = content.context_data['bob_page'].object_list
         self.assertEqual(len(rows_from_table), 3)
+
+
+class TestSearchLicences(TestCase):
+    def setUp(self):
+        self.client = login_as_su()
+        self.base_url = reverse('licence_list')
+
+        self.first_licence = LicenceFactory(
+            niw='654-999-321',
+        )
+
+        self.second_licence = LicenceFactory(
+            niw='321-654-789',
+        )
+
+        self.third_licence = LicenceFactory(
+            niw='321-789-654',
+        )
+        self.fourth_licence = LicenceFactory(
+            niw='MY-UNIQUE-NIW',
+        )
+
+    def test_niw_contains(self):
+        test_data = (
+            TestData(
+                input='654',
+                expected=[
+                    self.first_licence, self.second_licence,
+                    self.third_licence,
+                ],
+            ),
+            TestData(
+                input='321',
+                expected=[
+                    self.first_licence, self.second_licence,
+                    self.third_licence,
+                ],
+            ),
+            TestData(
+                input='54-9',
+                expected=[self.first_licence],
+            ),
+            TestData(
+                input='1-65',
+                expected=[self.second_licence],
+            ),
+            TestData(
+                input='404',
+                expected=[],
+            ),
+        )
+        for data in test_data:
+            url = '{}?niw={}'.format(self.base_url, data.input)
+            response = self.client.get(url)
+            error_msg = 'Test expected {} for input data {} but get {}'.format(
+                data.expected, data.input,
+                response.context['bob_page'].object_list,
+            )
+
+            self.assertEqual(response.status_code, 200)
+            self.assertItemsEqual(
+                response.context['bob_page'].object_list,
+                data.expected,
+                error_msg,
+            )
