@@ -8,12 +8,6 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Removing unique constraint on 'AssetModel', fields ['name']
-        db.delete_unique('ralph_assets_assetmodel', ['name'])
-
-        # Removing index on 'AssetModel', fields ['name']
-        db.delete_index('ralph_assets_assetmodel', ['name'])
-
         # Adding field 'Licence.remarks'
         db.add_column('ralph_assets_licence', 'remarks',
                       self.gf('django.db.models.fields.CharField')(default=None, max_length=1024, null=True, blank=True),
@@ -30,12 +24,6 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        # Adding index on 'AssetModel', fields ['name']
-        db.create_index('ralph_assets_assetmodel', ['name'])
-
-        # Adding unique constraint on 'AssetModel', fields ['name']
-        db.create_unique('ralph_assets_assetmodel', ['name'])
-
         # Deleting field 'Licence.remarks'
         db.delete_column('ralph_assets_licence', 'remarks')
 
