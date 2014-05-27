@@ -411,9 +411,10 @@ class BackOfficeBulkEditAssetForm(BulkEditAssetForm):
     class Meta(BulkEditAssetForm.Meta):
         fields = (
             'type', 'status', 'barcode', 'model', 'user', 'owner', 'warehouse',
-            'sn', 'property_of', 'purpose', 'service_name', 'invoice_no',
-            'invoice_date', 'price', 'provider', 'task_url', 'office_info',
-            'deprecation_rate', 'order_no', 'source', 'deprecation_end_date',
+            'sn', 'property_of', 'purpose', 'remarks', 'service_name',
+            'invoice_no', 'invoice_date', 'price', 'provider', 'task_url',
+            'office_info', 'deprecation_rate', 'order_no', 'source',
+            'deprecation_end_date',
         )
 
     model = AutoCompleteSelectField(
@@ -440,9 +441,9 @@ class DataCenterBulkEditAssetForm(BulkEditAssetForm):
     class Meta(BulkEditAssetForm.Meta):
         fields = (
             'status', 'barcode', 'model', 'user', 'owner', 'warehouse', 'sn',
-            'property_of', 'service_name', 'invoice_no', 'invoice_date',
-            'price', 'provider', 'task_url', 'deprecation_rate', 'order_no',
-            'source', 'deprecation_end_date',
+            'property_of', 'remarks', 'service_name', 'invoice_no',
+            'invoice_date', 'price', 'provider', 'task_url',
+            'deprecation_rate', 'order_no', 'source', 'deprecation_end_date',
         )
 
     model = AutoCompleteSelectField(
