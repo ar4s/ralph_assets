@@ -193,3 +193,20 @@ class TestBulkEdit(TestCase):
         self._test_showing_form_data(
             'back_office', bo_asset.id, bo_asset_data
         )
+
+    def test_remarks_field_available_on_dc_and_bo(self):
+        """
+        Remarks field should be available in both mode (DC and BO).
+        This simple test looking for remarks field in form.
+        """
+        asset_bo = AssetBOFactory()
+        asset_dc = AssetFactory()
+        field_name = 'remarks'
+
+        for mode in ['dc', 'back_office']:
+            url = ''.join([
+                reverse('bulkedit', kwargs={'mode': mode}),
+                '?select={}&select={}'.format(asset_bo.id, asset_dc.id),
+            ])
+            response = self.client.get(url)
+            self.assertTrue(response.context['formset'].forms[0][field_name])
