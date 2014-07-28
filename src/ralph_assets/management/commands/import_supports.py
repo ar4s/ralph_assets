@@ -93,7 +93,7 @@ class Command(BaseCommand):
             type='choice',
             dest='support_type',
             choices=MODE2ASSET_TYPE.keys(),
-            help='Support type',
+            help='Support type ({})'.format(', '.join(MODE2ASSET_TYPE.keys())),
         ),
     )
 
