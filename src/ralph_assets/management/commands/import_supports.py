@@ -19,7 +19,6 @@ from ralph_assets.models_assets import (
     MODE2ASSET_TYPE,
     Asset,
     AssetOwner,
-    AssetType,
 )
 from ralph_assets.models_support import Support
 
@@ -110,7 +109,7 @@ class Command(BaseCommand):
             for row in reader:
                 print('Add', row['name'], 'to', row['asset_sn'])
                 message = {}
-                asset_type = AssetType.id_from_name(support_type)
+                asset_type = MODE2ASSET_TYPE[support_type].id
                 support, created = Support.objects.get_or_create(
                     contract_id=row['contract_id'],
                     name=row['name'],
