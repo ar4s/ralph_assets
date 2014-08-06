@@ -23,7 +23,7 @@ from ralph_assets import models_assets
 from ralph_assets import models_support
 from ralph_assets import models_sam
 from ralph_assets.models_assets import Asset, SAVE_PRIORITY
-from ralph_assets.tests.utils import UserFactory
+from ralph_assets.tests.utils import UserFactory, ClientMixin
 from ralph_assets.tests.utils import assets as assets_utils
 from ralph_assets.tests.utils import sam as sam_utils
 from ralph_assets.tests.utils import supports as support_utils
@@ -42,7 +42,6 @@ from ralph.cmdb.tests.utils import (
 )
 from ralph.business.models import Venture
 from ralph.discovery.models_device import Device, DeviceType
-from ralph.ui.tests.global_utils import login_as_su
 
 
 def update(_dict, obj, keys):
@@ -116,7 +115,7 @@ def check_fields(testcase, correct_data, object_to_check):
         testcase.assertEqual(object_value, expected, msg)
 
 
-class BaseViewsTest(TestCase):
+class BaseViewsTest(ClientMixin, TestCase):
 
     def _assert_field_in_form(self, form_url, fields_names):
         check_strings = ('name="{}"'.format(f) for f in fields_names)
@@ -136,11 +135,11 @@ class BaseViewsTest(TestCase):
         return form_data
 
 
-class TestDataDisplay(TestCase):
+class TestDataDisplay(ClientMixin, TestCase):
     """Test check if data from database are displayed on screen"""
 
     def setUp(self):
-        self.client = login_as_su()
+        self.login_as_superuser()
         asset_fields = dict(
             barcode='123456789',
             invoice_no='Invoice #1',
@@ -165,6 +164,7 @@ class TestDevicesView(BaseViewsTest):
     """
 
     def setUp(self):
+        self.login_as_superuser()
         self._visible_add_form_fields = [
             'asset', 'barcode', 'budget_info', 'category', 'delivery_date',
             'deprecation_end_date', 'deprecation_rate', 'device_environment',
@@ -307,7 +307,7 @@ class TestDataCenterDevicesView(TestDevicesView, BaseViewsTest):
 
     def setUp(self):
         super(TestDataCenterDevicesView, self).setUp()
-        self.client = login_as_su()
+        self.login_as_superuser()
         self.asset_factory = DCAssetFactory
         self.mode = 'dc'
         self.asset_data = get_asset_data()
@@ -422,7 +422,7 @@ class TestBackOfficeDevicesView(TestDevicesView, BaseViewsTest):
 
     def setUp(self):
         super(TestBackOfficeDevicesView, self).setUp()
-        self.client = login_as_su()
+        self.login_as_superuser()
         self.asset_factory = BOAssetFactory
         self.mode = 'back_office'
         self.asset_data = get_asset_data()
@@ -606,7 +606,8 @@ class TestLicencesView(BaseViewsTest):
     """This test case concern all licences views."""
 
     def setUp(self):
-        self.client = login_as_su()
+        super(TestLicencesView, self).setUp()
+        self.login_as_superuser()
         self.license_data = {
             'accounting_id': '1',
             'asset_type': models_assets.AssetType.back_office.id,
@@ -760,12 +761,52 @@ class TestLicencesView(BaseViewsTest):
         response = self.client.post(url, request_data)
         self.assertEqual(response.status_code, 302)
 
+    def test_licence_count_simple(self):
+        licences = [LicenceFactory() for idx in xrange(5)]
+        licences[0].assets.add(*[BOAssetFactory() for _ in xrange(10)])
+        licences[0].users.add(*[UserFactory() for _ in xrange(5)])
+        url = reverse('count_licence')
+        url += '?id={}'.format(licences[0].id)
+        response = self.client.ajax_get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            json.loads(response.content),
+            {
+                'used_by_users': 5,
+                'used_by_assets': 10,
+                'total': licences[0].number_bought,
+            },
+        )
+
+    def test_licence_count_all(self):
+        licences = [LicenceFactory() for idx in xrange(5)]
+        total = sum(models_sam.Licence.objects.values_list(
+            'number_bought', flat=True)
+        )
+        [lic.assets.add(
+            *[BOAssetFactory() for _ in xrange(5)]
+        ) for lic in licences]
+        [lic.users.add(
+            *[UserFactory() for _ in xrange(5)]
+        ) for lic in licences]
+        url = reverse('count_licence')
+        response = self.client.ajax_get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            json.loads(response.content),
+            {
+                'used_by_users': 25,
+                'used_by_assets': 25,
+                'total': total,
+            },
+        )
+
 
 class TestSupportsView(BaseViewsTest):
     """This test case concern all supports views."""
 
     def setUp(self):
-        self.client = login_as_su()
+        self.login_as_superuser()
         support_utils.SupportTypeFactory().id
         self.support_data = dict(
             additional_notes="Additional notes",
@@ -876,10 +917,10 @@ class TestSupportsView(BaseViewsTest):
             self._assert_field_in_form(form_url, required_fields)
 
 
-class DeviceEditViewTest(TestCase):
+class DeviceEditViewTest(ClientMixin, TestCase):
 
     def setUp(self):
-        self.client = login_as_su()
+        self.login_as_superuser()
         self.asset_src = AssetFactory(sn='123-456-789')
         self.asset_dest = AssetFactory(sn='987-832-668')
 
@@ -1027,10 +1068,10 @@ class DeviceEditViewTest(TestCase):
         self.assertContains(response, part)
 
 
-class LookupsTest(TestCase):
+class LookupsTest(ClientMixin, TestCase):
 
     def setUp(self):
-        self.client = login_as_su()
+        self.login_as_superuser()
 
     def _generate_url(self, *lookup):
         channel = base64.b64encode(cPickle.dumps(lookup))
@@ -1102,9 +1143,9 @@ class ACLInheritanceTest(TestCase):
             self.assertIn(ACLGateway, found_class.__mro__, msg)
 
 
-class TestImport(TestCase):
+class TestImport(ClientMixin, TestCase):
     def setUp(self):
-        self.client = login_as_su()
+        self.login_as_superuser()
         self.url = reverse('xls_upload')
 
     def _update_asset_by_csv(self, asset, field, value):
@@ -1151,7 +1192,7 @@ class TestImport(TestCase):
 
 class TestColumnsInSearch(BaseViewsTest):
     def setUp(self):
-        self.client = login_as_su()
+        self.login_as_superuser()
 
     def get_cols_by_mode(self, bob_cols, mode):
         mode_cols = set()
@@ -1235,7 +1276,7 @@ class TestSyncFieldMixin(TestDevicesView):
     """Whether this the synced field will saved in Assets and Ralph Core"""
 
     def setUp(self):
-        self.client = login_as_su()
+        self.login_as_superuser()
         self.asset_factory = DCAssetFactory
 
     def create_device(self):
