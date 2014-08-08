@@ -24,12 +24,11 @@ from ralph_assets.models_assets import (
     AssetManufacturer,
     AssetOwner,
     AssetType,
-    Attachment,
     BudgetInfo,
     CreatableFromString,
-    LicenseAndAsset,
     Service,
 )
+from ralph_assets.models_attachments import AttachmentMixin
 from ralph_assets.models_util import (
     RestrictedLookupChannel,
     WithForm,
@@ -59,12 +58,12 @@ class SoftwareCategory(Named, CreatableFromString):
 
 
 class Licence(
-    LicenseAndAsset,
     MPTTModel,
     TimeTrackable,
     WithConcurrentGetOrCreate,
     WithForm,
     SavingUser,
+    AttachmentMixin,
 ):
     """A set of licences for a single software with a single expiration date"""
     manufacturer = models.ForeignKey(
@@ -140,7 +139,6 @@ class Licence(
         verbose_name=_('Assigned Assets'),
     )
     users = models.ManyToManyField(User)
-    attachments = models.ManyToManyField(Attachment, null=True, blank=True)
     provider = models.CharField(max_length=100, null=True, blank=True)
     invoice_no = models.CharField(
         max_length=128, db_index=True, null=True, blank=True

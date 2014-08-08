@@ -21,13 +21,13 @@ from lck.django.common.models import (
 )
 
 from ralph.discovery.models_util import SavingUser
-from ralph_assets import models_assets
 from ralph_assets.models_assets import (
     AssetType,
     Asset,
     AssetOwner,
     ASSET_TYPE2MODE,
 )
+from ralph_assets.models_attachments import AttachmentMixin
 
 
 class SupportType(Named):
@@ -44,17 +44,14 @@ class SupportStatus(Choices):
 class Support(
     EditorTrackable,
     Named.NonUnique,
-    models_assets.SupportAndAsset,
     SoftDeletable,
     SavingUser,
     TimeTrackable,
     WithConcurrentGetOrCreate,
+    AttachmentMixin,
 ):
     contract_id = models.CharField(max_length=50, blank=False)
     description = models.CharField(max_length=100, blank=True)
-    attachments = models.ManyToManyField(
-        models_assets.Attachment, null=True, blank=True
-    )
     price = models.DecimalField(
         max_digits=10, decimal_places=2, default=0, null=True, blank=True,
     )

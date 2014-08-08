@@ -18,7 +18,7 @@
       <thead><tr>
         <td style='text-align:center' colspan='4'>
           <a class='btn' target='_blank'
-            href="{% url add_attachment mode=mode parent=parent_name %}?select={{attachment_parent.id}}">
+            href="{{ attachment_parent.add_attachment_url }}">
             {% trans "Add attachment" %}
           </a>
         </td>
@@ -30,7 +30,7 @@
           <th>{% trans "Actions" %}</th>
       </tr></thead>
       <tbody id='attachments-rows'>
-      {% for file in attachment_parent.latest_attachments %}
+      {% for file in attachment_parent.attachments.all %}
       <tr class='{% if forloop.counter > 5 %}hide{% endif %} '>
           <td>{{ file.created|timesince_limited }}</td>
           <td>{{ file.uploaded_by|default:'' }}</td>
@@ -47,19 +47,19 @@
               </a>
               <ul class="dropdown-menu pull-right">
                 <li>
-                  <span class='btn btn-link delete-attachment'
-                    data-form-id='delete-attachment-{{file.id}}'
-                    data-delete-type='from_one'
-                  >
-                    {% blocktrans %} Delete from THIS {{parent_name}} {% endblocktrans %}
-                  </span>
-                  <li class="divider"></li>
-                  <span class='btn btn-link delete-attachment'
-                    data-form-id='delete-attachment-{{file.id}}'
-                    data-delete-type='from_all'
-                  >
-                    {% blocktrans %} Delete from ALL {{parent_name}}s {% endblocktrans %}
-                  </span>
+                  {# <span class='btn btn-link delete-attachment' #}
+{#                     data-form-id='delete-attachment-{{file.id}}' #}
+{#                     data-delete-type='from_one' #}
+{#                   > #}
+{#                     {% blocktrans %} Delete from THIS {{parent_name}} {% endblocktrans %} #}
+{#                   </span> #}
+{#                   <li class="divider"></li> #}
+{#                   <span class='btn btn-link, delete-attachment' #}
+{#                     data-form-id='delete-attachment-{{file.id}}' #}
+{#                     data-delete-type='from_all' #}
+{#                   > #}
+{#                     {% blocktrans %} Delete from ALL {{parent_name}}s {% endblocktrans %} #}
+{#                   </span> #}
                 </li>
               </ul>
             </div>

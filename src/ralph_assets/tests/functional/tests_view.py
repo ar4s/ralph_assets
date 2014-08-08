@@ -924,12 +924,9 @@ class TestAttachments(BaseViewsTest):
         assert that message about blank error exists
         """
         parent = BOAssetFactory()
-        add_attachment_url = reverse('add_attachment', kwargs={
-            'mode': 'back_office',
-            'parent': 'asset',
-        })
+
         full_url = "{}?{}".format(
-            add_attachment_url,
+            parent.add_attachment_url,
             urlencode({'select': obj.id for obj in [parent]}),
         )
         with tempfile.TemporaryFile() as test_file:
@@ -946,33 +943,22 @@ class TestAttachments(BaseViewsTest):
         )
 
     def test_add_bo_asset_attachment(self):
-        add_attachment_url = reverse('add_attachment', kwargs={
-            'mode': 'back_office',
-            'parent': 'asset',
-        })
-        self.add_attachment(BOAssetFactory(), add_attachment_url)
+        asset = BOAssetFactory()
+        self.add_attachment(BOAssetFactory(), asset.add_attachment_url)
 
     def test_add_dc_asset_attachment(self):
-        add_attachment_url = reverse('add_attachment', kwargs={
-            'mode': 'dc',
-            'parent': 'asset',
-        })
-        self.add_attachment(DCAssetFactory(), add_attachment_url)
+        asset = DCAssetFactory()
+        self.add_attachment(asset, asset.add_attachment_url)
 
     def test_add_license_attachment(self):
-        add_attachment_url = reverse('add_attachment', kwargs={
-            'mode': 'back_office',  # TODO: to rm if modes are cleaned
-            'parent': 'license',
-        })
-        self.add_attachment(LicenceFactory(), add_attachment_url)
+        licence = LicenceFactory()
+        self.add_attachment(licence, licence.add_attachment_url)
 
     def test_add_support_attachment(self):
-        add_attachment_url = reverse('add_attachment', kwargs={
-            'mode': 'back_office',  # TODO: to rm if modes are cleaned
-            'parent': 'support',
-        })
+        support = support_utils.BOSupportFactory()
+        add_attachment_url = support.add_attachment_url
         self.add_attachment(
-            support_utils.BOSupportFactory(),
+            support,
             add_attachment_url,
         )
 
@@ -981,11 +967,6 @@ class TestAttachments(BaseViewsTest):
         Checks if attachment can be added.
         """
         file_content = 'anything'
-        full_url = "{}?{}".format(
-            add_attachment_url,
-            urlencode({'select': obj.id for obj in [parent]}),
-        )
-
         asset = parent.__class__.objects.get(pk=parent.id)
         self.assertEqual(asset.attachments.count(), 0)
 
@@ -999,7 +980,7 @@ class TestAttachments(BaseViewsTest):
                 "form-MAX_NUM_FORMS": 1,
                 "form-0-file": test_file,
             }
-            response = self.client.post(full_url, data, follow=True)
+            response = self.client.post(add_attachment_url, data, follow=True)
 
         self.assertEqual(response.status_code, 200)
         asset = parent.__class__.objects.get(pk=parent.id)

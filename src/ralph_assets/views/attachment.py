@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 import logging
 
 from django.contrib import messages
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.forms.models import formset_factory
 from django.utils.translation import ugettext_lazy as _
@@ -15,7 +16,7 @@ from django.http import HttpResponseRedirect
 
 from ralph_assets import models as assets_models
 from ralph_assets.forms import AttachmentForm
-from ralph_assets.models_assets import Attachment
+from ralph_assets.models_attachments import Attachment
 from ralph_assets.views.base import AssetsBase, get_return_link
 
 
@@ -28,33 +29,34 @@ class AddAttachment(AssetsBase):
     Parent can be one of these models: License, Asset, Support.
     """
     template_name = 'assets/add_attachment.html'
+    mainmenu_selected = 'asset'
 
-    def dispatch(self, request, mode=None, parent=None, *args, **kwargs):
-        if parent == 'license':
-            parent = 'licence'
-        parent = parent.title()
-        self.Parent = getattr(assets_models, parent.title())
+    def dispatch(self, request, content_type_id, object_id, *args, **kwargs):
+        self.Parent = ContentType.objects.get_for_id(content_type_id).model_class()
+        self.parent = self.Parent.objects.get(pk=object_id)
+        self.content_type_id = content_type_id
+        self.object_id = object_id
         return super(AddAttachment, self).dispatch(
-            request, mode, *args, **kwargs
+            request, mode='dc', *args, **kwargs
         )
 
     def get_context_data(self, **kwargs):
         ret = super(AddAttachment, self).get_context_data(**kwargs)
         ret.update({
-            'selected_parents': self.selected_parents,
+            'selected_parents': [self.parent],
             'formset': self.attachments_formset,
             'mode': self.mode,
         })
         return ret
 
     def get(self, *args, **kwargs):
-        url_parents_ids = self.request.GET.getlist('select')
-        self.selected_parents = self.Parent.objects.filter(
-            pk__in=url_parents_ids,
-        )
-        if not self.selected_parents.exists():
-            messages.warning(self.request, _("Nothing to edit."))
-            return HttpResponseRedirect(get_return_link(self.mode))
+        # url_parents_ids = self.request.GET.getlist('select')
+        # self.selected_parents = self.Parent.objects.filter(
+        #     pk__in=url_parents_ids,
+        # )
+        # if not self.selected_parents.exists():
+        #     messages.warning(self.request, _("Nothing to edit."))
+        #     return HttpResponseRedirect(get_return_link(self.mode))
 
         AttachmentFormset = formset_factory(
             form=AttachmentForm, extra=1,
@@ -77,9 +79,11 @@ class AddAttachment(AssetsBase):
             for form in self.attachments_formset.forms:
                 attachment = form.save(commit=False)
                 attachment.uploaded_by = self.request.user
-                form.save()
-                for parent in self.selected_parents:
-                    parent.attachments.add(attachment)
+                attachment.content_type_id = self.content_type_id
+                attachment.object_id = self.object_id
+                attachment.save()
+                # for parent in self.selected_parents:
+                #     parent.attachments.add(attachment)
             messages.success(self.request, _("Changes saved."))
             return HttpResponseRedirect(get_return_link(self.mode))
         messages.error(self.request, _("Please correct the errors."))

@@ -55,6 +55,7 @@ from ralph_assets.models import (
     Service,
 )
 from ralph_assets import models_assets
+from ralph_assets.models_attachments import Attachment
 from ralph.ui.widgets import DateWidget, ReadOnlyWidget, SimpleReadOnlyWidget
 
 
@@ -1623,7 +1624,7 @@ class SplitDevice(ModelForm):
 
 class AttachmentForm(ModelForm):
     class Meta:
-        model = models_assets.Attachment
+        model = Attachment
         fields = ['file']
 
 

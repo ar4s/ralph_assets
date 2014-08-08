@@ -45,6 +45,7 @@ from ralph.business.models import Venture
 from ralph.discovery.models_device import Device, DeviceType
 from ralph.discovery.models_util import SavingUser
 from ralph_assets.models_util import WithForm
+from ralph_assets.models_attachments import AttachmentMixin
 from ralph_assets.utils import iso2_to_iso3
 
 
@@ -73,22 +74,6 @@ def get_user_iso3_country_name(user):
     country_name = Country.name_from_id(user.get_profile().country).upper()
     iso3_country_name = iso2_to_iso3[country_name]
     return iso3_country_name
-
-
-class LicenseAndAsset(object):
-
-    def latest_attachments(self):
-        attachments = self.attachments.all().order_by('-created')
-        for attachment in attachments:
-            yield attachment
-
-
-class SupportAndAsset(object):
-
-    def latest_attachments(self):
-        attachments = self.attachments.all().order_by('-created')
-        for attachment in attachments:
-            yield attachment
 
 
 class CreatableFromString(object):
@@ -328,16 +313,6 @@ class DCManager(DCAdminManager, ViewableSoftDeletableManager):
     pass
 
 
-class Attachment(SavingUser, TimeTrackable):
-    original_filename = models.CharField(max_length=255, unique=False)
-    file = models.FileField(upload_to=_get_file_path, blank=False, null=True)
-    uploaded_by = models.ForeignKey(User, null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        self.original_filename = self.file.name
-        super(Attachment, self).save(*args, **kwargs)
-
-
 class Service(Named, TimeTrackable):
     profit_center = models.CharField(max_length=1024, blank=True)
     cost_center = models.CharField(max_length=1024, blank=True)
@@ -396,12 +371,12 @@ class AssetLastHostname(models.Model):
 
 
 class Asset(
-    LicenseAndAsset,
     TimeTrackable,
     EditorTrackable,
     SavingUser,
     SoftDeletable,
     WithForm,
+    AttachmentMixin,
 ):
     '''
     Asset model contain fields with basic information about single asset
@@ -509,7 +484,6 @@ class Asset(
     user = models.ForeignKey(
         User, null=True, blank=True, related_name="user",
     )
-    attachments = models.ManyToManyField(Attachment, null=True, blank=True)
     loan_end_date = models.DateField(
         null=True, blank=True, default=None, verbose_name=_('Loan end date'),
     )

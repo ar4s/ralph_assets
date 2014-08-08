@@ -109,10 +109,10 @@ urlpatterns = patterns(
     url(r'(?P<mode>(back_office|dc))/add/part/',
         login_required(AddPart.as_view()),
         name='add_part'),
-    url(r'(?P<mode>(back_office|dc))/edit/device/(?P<asset_id>[0-9]+)/$',
+    url(r'(?P<mode>(back_office|dc|administration))/edit/device/(?P<asset_id>[0-9]+)/$',
         login_required(EditDevice.as_view()),
         name='device_edit'),
-    url(r'(?P<mode>(back_office|dc))/edit/part/(?P<asset_id>[0-9]+)/$',
+    url(r'(?P<mode>(back_office|dc|administration))/edit/part/(?P<asset_id>[0-9]+)/$',
         login_required(EditPart.as_view()),
         name='part_edit'),
     url(r'ajax/dependencies/category/$',
@@ -152,14 +152,16 @@ urlpatterns = patterns(
         name='transition',
     ),
     url(
-        r'(?P<mode>(back_office|dc))/add_attachment/(?P<parent>(asset|license|support))/$',  # noqa
+        r'attachments/add/'
+        r'(?P<content_type_id>[0-9]+)/(?P<object_id>[0-9]+)/$',  # noqa
         login_required(AddAttachment.as_view()),
         name='add_attachment'
     ),
     url(
-        r'add_attachment/(?P<parent>(asset|license))/$',  # noqa
-        login_required(AddAttachment.as_view()),
-        name='add_attachment'
+        r'attachments/delete/'
+        r'(?P<content_type_id>[0-9]+)/(?P<object_id>[0-9]+)/$',  # noqa
+        login_required(DeleteAttachment.as_view()),
+        name='delete_attachment',
     ),
     url(
         r'xls/$',
@@ -207,7 +209,7 @@ urlpatterns = patterns(
         name='add_support',
     ),
     url(
-        r'(?P<mode>(back_office|dc))/sup/edit_support/'
+        r'(?P<mode>(back_office|dc|administration))/sup/edit_support/'
         r'(?P<support_id>[0-9]+)$',
         login_required(EditSupportView.as_view()),
         name='edit_support',
@@ -226,11 +228,6 @@ urlpatterns = patterns(
         r'(?P<mode>(back_office|dc))/sam/delete/$',
         login_required(DeleteLicence.as_view()),
         name='delete_licence',
-    ),
-    url(
-        r'(?P<mode>(back_office|dc|administration|other))/delete/(?P<parent>(asset|license|support))/attachment/$',  # noqa
-        login_required(DeleteAttachment.as_view()),
-        name='delete_attachment',
     ),
     url(
         r'users/$',
