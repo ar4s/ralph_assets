@@ -944,7 +944,7 @@ class TestAttachments(BaseViewsTest):
 
     def test_add_bo_asset_attachment(self):
         asset = BOAssetFactory()
-        self.add_attachment(BOAssetFactory(), asset.add_attachment_url)
+        self.add_attachment(asset, asset.add_attachment_url)
 
     def test_add_dc_asset_attachment(self):
         asset = DCAssetFactory()
