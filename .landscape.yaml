@@ -1,0 +1,10 @@
+test-warnings: no
+strictness: high
+max-line-length: 80
+uses:
+    - django
+autodetect: yes
+ignore-paths:
+    - doc
+ignore-patterns:
+    - ^migrations.*\.py$
