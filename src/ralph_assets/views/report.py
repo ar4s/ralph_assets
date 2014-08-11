@@ -128,6 +128,7 @@ class CategoryModelReport(BaseReport):
     slug = 'category-model'
     name = _('Category - model')
 
+# <<<<<<< Updated upstream
     def prepare(self, mode):
         queryset = Asset.objects
         if mode:

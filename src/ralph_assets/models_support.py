@@ -27,7 +27,7 @@ from ralph_assets.models_assets import (
     AssetOwner,
     ASSET_TYPE2MODE,
 )
-from ralph_assets.models_attachments import AttachmentMixin
+from ralph_assets.models_attachments import WithAttachments
 
 
 class SupportType(Named):
@@ -48,7 +48,7 @@ class Support(
     SavingUser,
     TimeTrackable,
     WithConcurrentGetOrCreate,
-    AttachmentMixin,
+    WithAttachments,
 ):
     contract_id = models.CharField(max_length=50, blank=False)
     description = models.CharField(max_length=100, blank=True)

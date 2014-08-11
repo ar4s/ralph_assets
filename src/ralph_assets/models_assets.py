@@ -45,7 +45,7 @@ from ralph.business.models import Venture
 from ralph.discovery.models_device import Device, DeviceType
 from ralph.discovery.models_util import SavingUser
 from ralph_assets.models_util import WithForm
-from ralph_assets.models_attachments import AttachmentMixin
+from ralph_assets.models_attachments import WithAttachments
 from ralph_assets.utils import iso2_to_iso3
 
 
@@ -376,7 +376,7 @@ class Asset(
     SavingUser,
     SoftDeletable,
     WithForm,
-    AttachmentMixin,
+    WithAttachments,
 ):
     '''
     Asset model contain fields with basic information about single asset

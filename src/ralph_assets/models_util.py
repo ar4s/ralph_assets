@@ -27,15 +27,6 @@ class RestrictedLookupChannel(LookupChannel):
         if not request.user.is_authenticated():
             raise PermissionDenied
 
-# TODO: dead code?
-# class SavingUser(models.Model):
-#     class Meta:
-#         abstract = True
-
-#     def save(self, user=None, *args, **kwargs):
-#         self.saving_user = user
-#         return super(SavingUser, self).save(*args, **kwargs)
-
 
 class ProblemSeverity(Choices):
     _ = Choices.Choice

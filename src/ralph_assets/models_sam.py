@@ -28,7 +28,7 @@ from ralph_assets.models_assets import (
     CreatableFromString,
     Service,
 )
-from ralph_assets.models_attachments import AttachmentMixin
+from ralph_assets.models_attachments import WithAttachments
 from ralph_assets.models_util import (
     RestrictedLookupChannel,
     WithForm,
@@ -63,7 +63,7 @@ class Licence(
     WithConcurrentGetOrCreate,
     WithForm,
     SavingUser,
-    AttachmentMixin,
+    WithAttachments,
 ):
     """A set of licences for a single software with a single expiration date"""
     manufacturer = models.ForeignKey(

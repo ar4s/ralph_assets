@@ -38,7 +38,7 @@ class Attachment(SavingUser, TimeTrackable):
         super(Attachment, self).save(*args, **kwargs)
 
 
-class AttachmentMixin(models.Model):
+class WithAttachments(models.Model):
     attachments = generic.GenericRelation(Attachment)
 
     class Meta:
