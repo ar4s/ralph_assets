@@ -25,12 +25,15 @@ logger = logging.getLogger(__name__)
 
 class AttachmentMixin(object):
     def dispatch(self, request, *args, **kwargs):
-        self.Parent = ContentType.objects.get_for_id(
-            kwargs['content_type_id']).model_class()
-        self.parent = self.Parent.objects.get(pk=kwargs['object_id'])
-        self.attachment = None
+        objects_info = kwargs['object_info'].split('/')
+        self.objects = []
+        for obj in objects_info:
+            content_type = ContentType.objects.get_for_id(obj.split('_')[0])
+            obj = content_type.get_object_for_this_type(id=obj.split('_')[1])
+            self.objects.append(obj)
+
         if 'attachment_id' in kwargs:
-            self.attachment = Attachment.object.get(id=attachment_id)
+            self.attachment = Attachment.object.get(id=kwargs['attachment_id'])
         return super(AttachmentMixin, self).dispatch(
             request, *args, **kwargs
         )
@@ -46,7 +49,7 @@ class AddAttachment(AttachmentMixin, AssetsBase):
     def get_context_data(self, **kwargs):
         context = super(AddAttachment, self).get_context_data(**kwargs)
         context.update({
-            'selected_parents': [self.parent],
+            'selected_parents': self.objects,
         })
         return context
 
@@ -64,16 +67,17 @@ class AddAttachment(AttachmentMixin, AssetsBase):
         attachments_formset = AttachmentFormset(
             self.request.POST, self.request.FILES,
         )
-        kwargs['formset'] = attachments_formset
         if attachments_formset.is_valid():
             for form in attachments_formset.forms:
-                attachment = form.save(commit=False)
-                attachment.uploaded_by = self.request.user
-                attachment.content_type_id = self.kwargs['content_type_id']
-                attachment.object_id = self.kwargs['object_id']
-                attachment.save()
+                for obj in self.objects:
+                    attachment = form.save(commit=False)
+                    attachment.id = None
+                    attachment.uploaded_by = self.request.user
+                    attachment.content_object = obj
+                    attachment.save()
             messages.success(self.request, _('Changes saved.'))
             return HttpResponseRedirect('../../../../')  # TODO: change this
+        kwargs['formset'] = attachments_formset
         messages.error(self.request, _('Please correct the errors.'))
         return super(AddAttachment, self).get(*args, **kwargs)
 

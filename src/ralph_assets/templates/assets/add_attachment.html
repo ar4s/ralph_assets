@@ -23,7 +23,7 @@
 
 <form method="POST" class="form form-inline form-split" enctype="multipart/form-data">
   {% csrf_token %}
-  {{ formset.management_form }}
+  {{ params.formset.management_form }}
   <div class="row">
     <table class="table table-striped table-bordered table-condensed">
       <thead><tr>
@@ -31,7 +31,8 @@
         <th>{% trans "File" %}</th>
       </tr></thead>
       <tbody>
-        {% for form in formset %}
+      {{formset}}
+        {% for form in params.formset %}
           <tr>
             <td style="vertical-align:middle" class="ordinal" data-no="{{ forloop.counter }}">
               {{ forloop.counter }}

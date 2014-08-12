@@ -153,19 +153,22 @@ urlpatterns = patterns(
     ),
     url(
         r'attachments/add/'
-        r'(?P<content_type_id>[0-9]+)/(?P<object_id>[0-9]+)/$',  # noqa
+        r'(?P<object_info>[0-9_/]+)/$',  # noqa
+        # r'(?P<content_type_id>[0-9]+)_(?P<object_id>[0-9]+)/$',  # noqa
         login_required(AddAttachment.as_view()),
         name='add_attachment'
     ),
     url(
         r'attachments/delete/'
         r'(?P<content_type_id>[0-9]+)/(?P<object_id>[0-9]+)'  # noqa
+        # r'(?P<object_info>[0-9_]+)/$',  # noqa
         r'(?P<attachment_id>[0-9]+)/$',  # noqa
         login_required(DeleteAttachment.as_view()),
         name='delete_attachment',
     ),
     url(
         r'attachments/delete/'
+        # r'(?P<object_info>[0-9_]+)/$',  # noqa
         r'(?P<content_type_id>[0-9]+)/(?P<object_id>[0-9]+)/$',  # noqa
         login_required(DeleteAttachment.as_view()),
         name='delete_all_attachments',
