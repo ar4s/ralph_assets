@@ -27,5 +27,5 @@ def register(model, exclude=None):
             fields.append(field.name)
     registry[model] = fields
 
-    signals.pre_save.connect(pre_save, sender=model)
-    signals.post_save.connect(post_save, sender=model)
+    # signals.pre_save.connect(pre_save, sender=model)
+    # signals.post_save.connect(post_save, sender=model)
