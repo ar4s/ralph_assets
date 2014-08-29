@@ -9,7 +9,7 @@ from django.db.models import signals
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.fields.related import RelatedField
 
-from ralph_assets.history.receivers import post_save, pre_save
+from ralph_assets.history.receivers import post_save, pre_save, m2m_changed
 
 
 registry = {}
@@ -36,7 +36,12 @@ def register(model, exclude):
 
 
 def register_m2m(model, m2m_fields):
-    print(model, m2m_fields)  # DETELE THIS
+    for field in m2m_fields:
+        real_field = getattr(model, field)
+        signals.m2m_changed.connect(
+            m2m_changed,
+            sender=real_field.through,
+        )
 
 
 def field_changes(instance, ignore=('id', 'ralph_device_id')):

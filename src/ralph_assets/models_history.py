@@ -1,1 +1,1 @@
-from ralph_assets.history.models import *
+from ralph_assets.history.models import *  # noqa
