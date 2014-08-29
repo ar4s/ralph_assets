@@ -11,7 +11,7 @@ from ralph_assets.history.models import History
 
 
 class DictDiffer(object):
-    """Based on stack overflow"""
+    """Based on stack overflow answer."""
     def __init__(self, current_dict, past_dict):
         self.current_dict, self.past_dict = current_dict, past_dict
         self.set_current = set(current_dict.keys())

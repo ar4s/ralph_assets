@@ -192,7 +192,8 @@ class Licence(
     @used.setter
     def used(self, value):
         self._used = value
-# history.register(Licence, exclude=['all'])
+history.register(Licence, exclude=['created', 'modified', 'invoice_date'])
+
 
 class BudgetInfoLookup(RestrictedLookupChannel):
     model = BudgetInfo

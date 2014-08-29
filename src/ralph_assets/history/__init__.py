@@ -15,7 +15,7 @@ from ralph_assets.history.receivers import post_save, pre_save
 registry = {}
 
 
-def register(model, exclude=None):
+def register(model, exclude):
     """Register model to history observer."""
     if exclude is None:
         raise TypeError('Please specified fields or exclude argument.')
@@ -24,13 +24,18 @@ def register(model, exclude=None):
         raise Exception('{} is arleady registered.')
 
     fields = []
-    for field in model._meta.fields:
+    meta = model._meta
+    for field in meta.fields:
         if field.name not in exclude:
             fields.append(field.name)
     registry[model] = fields
 
     signals.pre_save.connect(pre_save, sender=model)
     signals.post_save.connect(post_save, sender=model)
+
+
+def register_m2m(model, m2m_fields):
+    pass
 
 
 def field_changes(instance, ignore=('id', 'ralph_device_id')):

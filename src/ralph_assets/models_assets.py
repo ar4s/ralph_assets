@@ -509,7 +509,7 @@ class Asset(
         User, null=True, blank=True, related_name="owner",
     )
     user = models.ForeignKey(
-        User, null=True, blank=True, related_name="user",
+        User, null=True, blnak=True, related_name="user",
     )
     attachments = models.ManyToManyField(
         Attachment,
@@ -754,6 +754,7 @@ class Asset(
     def asset_type(self):
         return self.type
 history.register(Asset, exclude=['created', 'modified', 'invoice_date'])
+history.register_m2m(Asset, m2m_fields=['attachments'])
 
 
 @receiver(post_save, sender=Asset, dispatch_uid='ralph.create_asset')
