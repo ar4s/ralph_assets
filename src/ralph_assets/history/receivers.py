@@ -16,5 +16,5 @@ def post_save(sender, instance, **kwargs):
     context.end()
 
 
-def m2m_changed(sender, instance, action, reverse, model, pk_set):
+def m2m_changed(sender, instance, action, reverse, model, pk_set, **kwargs):
     print(sender, instance, action, reverse, model, pk_set)  # DETELE THIS
