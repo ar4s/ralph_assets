@@ -17,6 +17,8 @@ from django.utils.translation import ugettext_lazy as _
 
 class HistoryManager(models.Manager):
     def get_history_for_this_object(self, obj):
+        if not obj:
+            return
         content_type = ContentType.objects.get_for_model(obj.__class__)
         return self.get_history_for_this_content_type(
             content_type=content_type,
