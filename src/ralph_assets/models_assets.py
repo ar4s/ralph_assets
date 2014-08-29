@@ -509,7 +509,7 @@ class Asset(
         User, null=True, blank=True, related_name="owner",
     )
     user = models.ForeignKey(
-        User, null=True, blnak=True, related_name="user",
+        User, null=True, blank=True, related_name="user",
     )
     attachments = models.ManyToManyField(
         Attachment,

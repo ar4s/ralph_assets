@@ -13,6 +13,7 @@ from ralph_assets.history.receivers import post_save, pre_save
 
 
 registry = {}
+registry_m2m = {}
 
 
 def register(model, exclude):
@@ -35,7 +36,7 @@ def register(model, exclude):
 
 
 def register_m2m(model, m2m_fields):
-    pass
+    print(model, m2m_fields)  # DETELE THIS
 
 
 def field_changes(instance, ignore=('id', 'ralph_device_id')):
