@@ -127,7 +127,7 @@ class HistoryAssetsView(TestCase):
             field_name='barcode'
         )
         self.assertListEqual(
-            [asset_history[0].old_value, asset_history[0].new_value],
+            [asset_history.old_value, asset_history.new_value],
             [self.asset_params['barcode'], self.asset_change_params['barcode']]
         )
 

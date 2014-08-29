@@ -19,7 +19,7 @@ def short_history(obj, limit=5, full_history_button=True):
     """Render a short history table."""
     status_history = History.objects.get_history_for_this_object(
         obj=obj
-    ).order_by('-date')
+    ).order_by('date')
     return {
         'full_history_button': full_history_button,
         'history_for_model_url': History.get_history_url_for_object(obj),
@@ -37,7 +37,7 @@ def status_history(obj, limit=5, full_history_button=True):
         obj=obj
     ).filter(
         field_name__exact='status',
-    ).order_by('-date')
+    ).order_by('date')
     return {
         'full_history_button': full_history_button,
         'history_for_model_url': History.get_history_url_for_object(obj),

@@ -228,18 +228,3 @@ class SoftwareCategoryLookup(RestrictedLookupChannel):
 
     def format_item_display(self, obj):
         return escape(obj.name)
-
-
-from django.db.models.signals import pre_save, post_save
-from django.dispatch import receiver
-
-@receiver(post_save, sender=Licence, dispatch_uid='ralph.history_licenceDUPA')
-def licence_post_save(sender, instance, raw, using, **kwargs):
-    print('post')  # DETELE THIS
-    print(instance)  # DETELE THIS
-
-
-@receiver(pre_save, sender=Licence, dispatch_uid='ralph.history_licencesDUPAPRE')
-def licence_pre_save(sender, instance, raw, using, **kwargs):
-    print('pre')  # DETELE THIS
-    print(instance)  # DETELE THIS

@@ -753,7 +753,7 @@ class Asset(
     @property
     def asset_type(self):
         return self.type
-history.register(Asset, exclude=['all'])
+# history.register(Asset, exclude=['hostname'])
 
 
 @receiver(post_save, sender=Asset, dispatch_uid='ralph.create_asset')

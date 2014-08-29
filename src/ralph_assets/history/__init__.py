@@ -15,15 +15,17 @@ registry = {}
 
 def register(model, exclude=None):
     """Register model to history observer."""
-    return
     if exclude is None:
         raise TypeError('Please specified fields or exclude argument.')
 
     if model in registry:
         raise Exception('{} is arleady registered.')
-    registry[model] = exclude
 
-    print('register pre_save', model)
+    fields = []
+    for field in model._meta.fields:
+        if field.name not in exclude:
+            fields.append(field.name)
+    registry[model] = fields
+
     signals.pre_save.connect(pre_save, sender=model)
-    print('register post_save', model)
     signals.post_save.connect(post_save, sender=model)
