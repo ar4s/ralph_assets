@@ -753,7 +753,7 @@ class Asset(
     @property
     def asset_type(self):
         return self.type
-history.register(Asset, exclude=['created'])
+history.register(Asset, exclude=['created', 'modified', 'invoice_date'])
 
 
 @receiver(post_save, sender=Asset, dispatch_uid='ralph.create_asset')
@@ -912,7 +912,6 @@ def device_hostname_assigning(sender, instance, raw, using, **kwargs):
     """A hook for assigning ``hostname`` value when an asset is edited."""
     if getattr(settings, 'ASSETS_AUTO_ASSIGN_HOSTNAME', None):
         for field, orig, new in field_changes(instance):
-            print(field, orig, new)
             status_desc = AssetStatus.in_progress.desc
             if all((
                 field == 'status', orig != status_desc, new == status_desc
