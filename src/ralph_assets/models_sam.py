@@ -198,6 +198,7 @@ history.register(Licence, exclude=[
 )
 history.register_m2m(Licence, m2m_fields=['assets', 'users'])
 
+
 class BudgetInfoLookup(RestrictedLookupChannel):
     model = BudgetInfo
 
