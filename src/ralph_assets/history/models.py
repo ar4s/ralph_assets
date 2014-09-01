@@ -67,6 +67,13 @@ class History(models.Model):
         verbose_name = _('history change')
         verbose_name_plural = _('history changes')
 
+    def __unicode__(self):
+        return '{}: {} -> {}'.format(
+            self.field_name,
+            self.old_value,
+            self.new_value
+        )
+
     @classmethod
     def get_history_url_for_object(cls, obj):
         content_type = ContentType.objects.get_for_model(obj.__class__)

@@ -192,8 +192,11 @@ class Licence(
     @used.setter
     def used(self, value):
         self._used = value
-history.register(Licence, exclude=['created', 'modified', 'invoice_date'])
-
+history.register(Licence, exclude=[
+    'created', 'modified', 'invoice_date', 'cache_version', 'rght', 'level',
+    'lft', 'tree_id']
+)
+history.register_m2m(Licence, m2m_fields=['assets', 'users'])
 
 class BudgetInfoLookup(RestrictedLookupChannel):
     model = BudgetInfo

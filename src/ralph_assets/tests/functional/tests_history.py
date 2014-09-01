@@ -24,6 +24,7 @@ from ralph_assets.tests.utils.assets import (
     BOAssetFactory,
     WarehouseFactory,
 )
+from ralph_assets.tests.utils.sam import LicenceFactory
 from ralph.business.models import Venture
 from ralph.discovery.models_device import Device, DeviceType
 from ralph.ui.tests.global_utils import login_as_su
@@ -39,6 +40,7 @@ class HistoryAssetsView(TestCase):
             manufacturer=self.manufacturer,
             category=self.category,
         )
+        self.licences = [LicenceFactory() for _ in range(3)]
         self.warehouse = WarehouseFactory()
         self.asset_params = {
             'type': 101,
@@ -72,6 +74,7 @@ class HistoryAssetsView(TestCase):
             'license_type': LicenseType.oem.id,
             'date_of_last_inventory': '2012-11-08',
             'last_logged_user': 'ralph',
+            'licences': [int(lic.pk) for lic in self.licences],
         }
         self.dc_asset_params = self.asset_params.copy()
         self.dc_asset_params.update({

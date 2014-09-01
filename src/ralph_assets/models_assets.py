@@ -753,7 +753,8 @@ class Asset(
     @property
     def asset_type(self):
         return self.type
-history.register(Asset, exclude=['created', 'modified', 'invoice_date'])
+history.register(Asset, exclude=['created', 'modified', 'invoice_date',
+                 'cache_version'])
 history.register_m2m(Asset, m2m_fields=['attachments'])
 
 
