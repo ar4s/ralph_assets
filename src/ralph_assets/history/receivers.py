@@ -17,7 +17,7 @@ def post_save(sender, instance, **kwargs):
 
 
 def m2m_changed(sender, instance, action, reverse, model, pk_set, **kwargs):
-    if action == 'pre_add':
+    if not context.obj and action in ['pre_clear', 'pre_add']:
         context.start(instance, m2m=True)
     elif action == 'post_add':
         context.end()

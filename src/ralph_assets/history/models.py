@@ -31,13 +31,14 @@ class HistoryManager(models.Manager):
             object_id=object_id,
         )
 
-    def log_changes(self, obj, diff_data):
+    def log_changes(self, obj, user, diff_data):
         content_type = ContentType.objects.get_for_model(obj.__class__)
         changed_items = []
 
         for data in diff_data:
             changed_items.append(
                 self.model(
+                    user=user,
                     content_type=content_type,
                     object_id=obj.id,
                     field_name=data['field'],
@@ -58,14 +59,15 @@ class History(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
     field_name = models.CharField(max_length=64, default='')
-    old_value = models.CharField(max_length=255, default='')
-    new_value = models.CharField(max_length=255, default='')
+    old_value = models.TextField(default='')
+    new_value = models.TextField(default='')
     objects = HistoryManager()
 
     class Meta:
         app_label = 'ralph_assets'
         verbose_name = _('history change')
         verbose_name_plural = _('history changes')
+        ordering = ('-date',)
 
     def __unicode__(self):
         return '{}: {} -> {}'.format(

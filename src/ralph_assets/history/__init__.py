@@ -18,25 +18,28 @@ registry_m2m = {}
 
 def register(model, exclude):
     """Register model to history observer."""
-    model.__class__.in_history_registry = True
     if exclude is None:
-        raise TypeError('Please specified fields or exclude argument.')
+        raise TypeError('Please specified exclude argument.')
 
     if model in registry:
         raise Exception('{} is arleady registered.'.format(model))
 
-    fields = []
-    meta = model._meta
-    for field in meta.fields:
-        if field.name not in exclude:
-            fields.append(field.name)
+    fields = set([field.name for field in model._meta.fields])
+    fields.difference_update(set(exclude))
     registry[model] = fields
+    model.__class__.in_history_registry = True
 
     signals.pre_save.connect(pre_save, sender=model)
     signals.post_save.connect(post_save, sender=model)
 
 
 def register_m2m(model, m2m_fields, symetric=True):
+    if m2m_fields is None:
+        raise TypeError('Please specified m2m_fields argument.')
+
+    if model in registry_m2m:
+        raise Exception('{} is arleady registered.'.format(model))
+
     model.__class__.in_history_m2m_registry = True
     model.__class__.in_history_m2m_symetric = symetric
     registry_m2m[model] = m2m_fields

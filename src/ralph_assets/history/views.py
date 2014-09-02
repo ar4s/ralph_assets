@@ -6,13 +6,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from ralph_assets.history.models import History
-from ralph_assets.utils import ContentTypeMixin
-from ralph_assets.views.base import AssetsBase
+from ralph_assets.views.base import AssetsBase, ContentTypeMixin, PaginateMixin
 from ralph_assets.models_assets import ASSET_TYPE2MODE
-
-
-MAX_PAGE_SIZE = 65535
-HISTORY_PAGE_SIZE = 25
 
 
 class HistoryBase(AssetsBase):
@@ -38,8 +33,15 @@ class HistoryBase(AssetsBase):
         return context
 
 
-class HistoryListForModel(ContentTypeMixin, HistoryBase):
+class HistoryListForModel(PaginateMixin, ContentTypeMixin, HistoryBase):
+    """View for history of object."""
     template_name = 'assets/history/history_for_model.html'
+
+    def get_paginate_queryset(self):
+        return History.objects.get_history_for_this_content_type(
+            content_type=self.content_type,
+            object_id=self.object_id,
+        )
 
     def get_context_data(self, **kwargs):
         context = super(HistoryListForModel, self).get_context_data(**kwargs)
