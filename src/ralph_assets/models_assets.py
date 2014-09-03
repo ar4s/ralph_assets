@@ -753,9 +753,9 @@ class Asset(
     @property
     def asset_type(self):
         return self.type
+
 history.register(Asset, exclude=['created', 'modified', 'invoice_date',
                  'cache_version'])
-history.register_m2m(Asset, m2m_fields=['attachments'])
 
 
 @receiver(post_save, sender=Asset, dispatch_uid='ralph.create_asset')
@@ -907,7 +907,7 @@ class ReportOdtSource(Named, SavingUser, TimeTrackable):
     template = models.FileField(upload_to=_get_file_path, blank=False)
 
 
-from ralph_assets.history import field_changes
+from ralph_assets.history.utils import field_changes
 
 
 @receiver(pre_save, sender=Asset, dispatch_uid='ralph_assets.views.device')

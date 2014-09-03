@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """Templatetags specific for ralph_assets"""
 from __future__ import absolute_import
 from __future__ import division

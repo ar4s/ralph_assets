@@ -36,6 +36,7 @@ from ralph_assets.models_util import (
 )
 from ralph.discovery.models_util import SavingUser
 from ralph_assets import history
+from ralph_assets.history.models import ManyToManyHistoryMixin
 
 
 class LicenceType(Named):
@@ -60,6 +61,7 @@ class SoftwareCategory(Named, CreatableFromString):
 
 
 class Licence(
+    ManyToManyHistoryMixin,
     LicenseAndAsset,
     MPTTModel,
     TimeTrackable,
@@ -192,11 +194,11 @@ class Licence(
     @used.setter
     def used(self, value):
         self._used = value
+
 history.register(Licence, exclude=[
     'created', 'modified', 'invoice_date', 'cache_version', 'rght', 'level',
     'lft', 'tree_id']
 )
-history.register_m2m(Licence, m2m_fields=['assets', 'users'])
 
 
 class BudgetInfoLookup(RestrictedLookupChannel):

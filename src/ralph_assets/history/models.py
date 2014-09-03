@@ -15,6 +15,14 @@ from django.contrib.contenttypes.generic import GenericForeignKey
 from django.utils.translation import ugettext_lazy as _
 
 
+class ManyToManyHistoryMixin(object):
+    """Django's m2m_change signal sucks!"""
+    def save(self, *args, **kwargs):
+        print("PRE")  # DETELE THIS
+        super(ManyToManyHistoryMixin, self).save(*args, **kwargs)
+        print("POST")  # DETELE THIS
+
+
 class HistoryManager(models.Manager):
     def get_history_for_this_object(self, obj):
         if not obj:
@@ -32,6 +40,8 @@ class HistoryManager(models.Manager):
         )
 
     def log_changes(self, obj, user, diff_data):
+        if not obj:
+            return
         content_type = ContentType.objects.get_for_model(obj.__class__)
         changed_items = []
 
@@ -70,7 +80,9 @@ class History(models.Model):
         ordering = ('-date',)
 
     def __unicode__(self):
-        return '{}: {} -> {}'.format(
+        return 'in {} (id: {}) change {}: {} -> {}'.format(
+            self.content_type,
+            self.object_id,
             self.field_name,
             self.old_value,
             self.new_value
