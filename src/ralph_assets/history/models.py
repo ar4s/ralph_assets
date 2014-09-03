@@ -19,6 +19,7 @@ class ManyToManyHistoryMixin(object):
     """Django's m2m_change signal sucks!"""
     def save(self, *args, **kwargs):
         print("PRE")  # DETELE THIS
+        print(self._meta)  # DETELE THIS
         super(ManyToManyHistoryMixin, self).save(*args, **kwargs)
         print("POST")  # DETELE THIS
 

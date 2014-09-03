@@ -9,7 +9,6 @@ from django.core import serializers
 from django.db.models import Model
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.fields.related import RelatedField
-from django.utils.functional import cached_property
 
 from ralph_assets.history.models import History
 
@@ -122,125 +121,6 @@ class HistoryContext(object):
             from ralph_assets.history import registry
             return registry
 
-    @property
-    def m2m_info(self):
-        source_class = self.obj.__class__
-        source_obj = self.obj
-        source_field_name = source_class._meta.object_name.lower()
-
-        target_field = None
-        for target_field in self.sender._meta.fields[1:]:
-            if target_field.name != source_class._meta.object_name.lower():
-                break
-        m2m_class = target_field.model
-        target_class = target_field.related.parent_model
-        target_obj = target_class.objects.filter(pk__in=self.pk_set)
-        target_field_name = target_field.name
-        return locals()
-
-    def m2m_pre_save(self):
-        # print(self.m2m_info['source_field_name'])
-        kwargs = {
-            self.m2m_info['source_field_name']: self.obj.pk,
-        }
-        snapshot = self.get_fields_snapshot(
-            self.sender.objects.filter(**kwargs)
-        )
-        self.past_snapshot = []
-        if snapshot:
-            self.past_snapshot = [snap['fields'] for snap in snapshot]
-
-    def m2m_post_save(self):
-        kwargs = {
-            self.m2m_info['source_field_name']: self.obj.pk,
-        }
-        # snapshot = self.get_fields_snapshot(self.sender.objects.filter(**kwargs))
-        # current_snapshot = [snap['fields'] for snap in snapshot]
-
-        # field = self.m2m_info['target_field_name']
-        # obj = self.obj
-        # old = set([item[field] for item in self.past_snapshot])
-        # new = set([item[field] for item in current_snapshot])
-
-        # History.objects.log_changes(obj, self.obj.saving_user, [{
-        #     'field': field,
-        #     'old': old,
-        #     'new': new,
-        # }])
-
-
-        # if not self.reverse:
-        #     kwargs = {
-        #         '{}__in'.format(self.m2m_info['target_field_name']): self.m2m_info['target_obj'],
-        #         # self.m2m_info['source_field_name']: self.m2m_info['source_obj'],
-        #     }
-        #     snapshot = self.get_fields_snapshot(self.sender.objects.filter(**kwargs))
-        #     current_snapshot = [snap['fields'] for snap in snapshot]
-        #     # print(self.m2m_info['source_obj'], current_snapshot)  # DETELE THIS
-        #     field = self.m2m_info['source_field_name']
-        #     old = set([item[field] for item in self.past_snapshot])
-        #     new = set([item[field] for item in current_snapshot])
-        #     print(old, new)  # DETELE THIS
-        #     if old != new:
-        #         for obj in self.m2m_info['target_obj']:
-        #             History.objects.log_changes(obj, self.obj.saving_user, [{
-        #                 'field': field,
-        #                 'old': old,
-        #                 'new': new,
-        #             }])
-
-
-
-
-        # kwargs = {
-        #     to_field_name: to_obj,
-        #     from_field_name: from_obj,
-        # }
-        # m2m_objs = m2m_class.objects.filter(**kwargs)
-        # print('m2m', [(m.asset.pk, m.licence.pk) for m in m2m_objs])  # DETELE THIS
-
-
-        # print(self.sender._default_manager.all())
-        # dest_field = None
-        # for dest_field in self.sender._meta.fields[1:]:
-        #     if dest_field.name != affected_field:
-        #         break
-
-        # print(self.obj, self.sender, self.pk_set)  # DETELE THIS
-        # History.objects.log_changes(self.obj, self.obj.saving_user, [{
-        #     'field': dest_field.name,
-        #     'old': str(self.obj),
-        #     'new': dest_field.parent_model._default_manager.get,
-        # }])
-
-
-        # affected_field = self.obj.__class__._meta.object_name.lower()
-        # print(affected_field)  # DETELE THIS
-        # print(self.obj.pk)
-        # for diff in diff_data:
-        #     added = set(diff['new']).difference(diff['old'])
-        #     for pk in added:
-        #         model = getattr(self.obj, diff['field']).model
-        #         obj = model._default_manager.get(pk=pk)
-        #         related_name = self.model._meta.get_field_by_name(
-        #             diff['field']
-        #         )[0].related_query_name()
-        #         all_related = (
-        #             getattr(obj, related_name + '_set', None)
-        #             or getattr(obj, related_name)
-        #         ).all
-        #         History.objects.log_changes(obj, self.obj.saving_user, [{
-        #             'field': affected_field,
-        #             'old': str(self.obj),
-        #             'new': ', '.join([str(o) for o in all_related()]),
-        #         }])
-        #         # add licence to asset history
-        #         History.objects.log_changes(self.obj, self.obj.saving_user, [{
-        #             'field': affected_field,
-        #             'old': str(self.obj),
-        #             'new': ', '.join([str(o) for o in all_related()]),
-        #         }])
-
     def pre_save(self):
         self.pre_obj = None
         try:
@@ -256,7 +136,6 @@ class HistoryContext(object):
             return
         current_snapshot = self.get_fields_snapshot([self.obj])[0]['fields']
 
-        # print(current_snapshot, self.past_snapshot)
         fields_diff = DictDiffer(
             current_snapshot, self.past_snapshot).changed()
 
@@ -291,45 +170,14 @@ class HistoryContext(object):
             )
         History.objects.log_changes(self.obj, self.obj.saving_user, diff_data)
 
-        # if self.m2m and self.model.in_history_m2m_symetric:
-            # field = None
-            # for field in self.sender._meta.fields[1:]:
-            #     if field.related.parent_model == self.obj.__class__:
-            #         break
-
-            # print(field)  # DETELE THIS
-            # print(self.obj)  # DETELE THIS
-            # for field in self.sender._meta.fields[1:]:
-            #     print(field.related.parent_model)
-            #     History.objects.log_changes(self.obj, self.obj.saving_user, [{
-            #         'field': 'affected_field',
-            #         'old': str(self.obj),
-            #         'new': 'dups'
-            #     }])
-
-
-            # print(self.sender._meta.fields[1:])
-            # print(self.obj._meta.get_all_related_objects())  # DETELE THIS
-            # print([rel.get_accessor_name() for rel in self.obj._meta.get_all_related_objects()])
-
     def start(self, sender, obj, m2m=False, pk_set=set(), reverse=False):
-        self.m2m = m2m
         self.obj = obj
-        self.reverse = reverse
         self.model = self.obj.__class__
-        self.pk_set = pk_set
         self.sender = sender
-        if m2m:
-            self.m2m_pre_save()
-        else:
-            self.pre_save()
+        self.pre_save()
 
     def end(self):
-        if self.m2m:
-            self.m2m_post_save()
-        else:
-            self.post_save()
-        self.m2m = False
+        self.post_save()
         self.obj = None
         self.sender = None
         self.reverse = False
