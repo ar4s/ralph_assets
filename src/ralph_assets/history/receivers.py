@@ -20,4 +20,7 @@ def m2m_changed(sender, instance, action, reverse, **kwargs):
     if action in ('pre_clear',) and reverse:
         instance.save_reverse_relation_history()
     if action in ('post_add',) and not reverse:
-        instance.save_m2m_history()
+        def noop():
+            pass
+
+        getattr(instance, 'save_m2m_history', noop)()
