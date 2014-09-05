@@ -179,9 +179,6 @@ class TestModelHistory(TestCase):
         asset.save()
         self.assertEqual(2, history.count())
 
-        asset.licence_set.add(LicenceFactory(pk=321))
-        self.assertEqual(3, history.count())
-
         licence = LicenceFactory()
         history = History.objects.get_history_for_this_object(obj=licence)
         licence.save()

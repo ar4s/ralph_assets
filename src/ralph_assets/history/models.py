@@ -134,14 +134,13 @@ class HistoryMixin(object):
             obj, field_name
         ):
             break
-        previous_set = getattr(history, 'new_value', '[]')
-        previous_set = json.loads(previous_set)
-        current_set = [s['pk'] for s in snapshot]
-        deleted = set(previous_set) - set(current_set)
-        added = set(current_set) - set(previous_set)
-        changed = not set(current_set) == set(previous_set)
-        return Snapshot(current_set, previous_set, added, deleted, changed,
-                        obj, field_name)
+        prev = getattr(history, 'new_value', None)
+        prev = prev and json.loads(prev) or []
+        curr = [s['pk'] for s in snapshot]
+        deleted = set(prev) - set(curr)
+        added = set(curr) - set(prev)
+        changed = not set(curr) == set(prev)
+        return Snapshot(curr, prev, added, deleted, changed, obj, field_name)
 
     def save_history_from_snapshot(self, snapshot):
         if snapshot.changed:
@@ -167,8 +166,9 @@ class HistoryMixin(object):
             field_name = field.get_accessor_name()
             reverse_manager = getattr(self, field_name)
             snapshot = self.get_snapshot(self, reverse_manager, field_name)
-            print(snapshot)  # DETELE THIS
-            # self._save_related_objects_history()
+            self._save_related_objects_history(
+                reverse_manager, snapshot.added, field.field.name
+            )
             self.save_history_from_snapshot(snapshot)
 
     def save_m2m_history(self):

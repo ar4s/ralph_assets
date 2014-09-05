@@ -83,15 +83,6 @@ class DictDiffer(object):
         )
 
 
-class ListDiffer(object):
-    def __init__(self, current, past):
-        self.current, self.past = current, past
-
-    def changed(self):
-        self.past = set(self.past)
-        return [item for item in self.current if item not in self.past]
-
-
 class HistoryContext(object):
 
     def __init__(self):
@@ -141,8 +132,10 @@ class HistoryContext(object):
             new_value = current_snapshot[field]
             old_field, _, _, _ = self.pre_obj._meta.get_field_by_name(field)
             new_field, _, _, _ = self.obj._meta.get_field_by_name(field)
-
-            if hasattr(old_field, 'choices') and old_field.choices:
+            if isinstance(new_field, RelatedField):
+                old_value = str(getattr(self.pre_obj, field))
+                new_value = str(getattr(self.obj, field))
+            elif hasattr(old_field, 'choices') and old_field.choices:
                 if int(old_value) == int(new_value):
                     continue
                 old_value = get_choices(self.pre_obj, field, old_value)
@@ -154,9 +147,6 @@ class HistoryContext(object):
                 new_value = getattr(
                     self.obj, 'get_{}_display'.format(field)
                 )()
-            elif isinstance(new_field, Model):
-                old_value = str(getattr(self.pre_obj, field))
-                new_value = str(getattr(self.obj, field))
 
             if str(old_value) != str(new_value):
                 diff_data.append(
