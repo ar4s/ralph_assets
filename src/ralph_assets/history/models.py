@@ -45,7 +45,8 @@ class HistoryManager(models.Manager):
             })
         return self.get_history_for_this_content_type(**kwargs)
 
-    def get_history_for_this_content_type(self, content_type, object_id, **kwargs):
+    def get_history_for_this_content_type(
+            self, content_type, object_id, **kwargs):
         return self.model.objects.filter(
             content_type=content_type,
             object_id=object_id,

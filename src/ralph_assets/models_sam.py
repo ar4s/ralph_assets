@@ -35,7 +35,6 @@ from ralph_assets.models_util import (
     WithForm,
 )
 from ralph.discovery.models_util import SavingUser
-from ralph_assets import history
 from ralph_assets.history.models import HistoryMixin
 
 

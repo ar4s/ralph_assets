@@ -78,7 +78,7 @@ class Migration(SchemaMigration):
                         )
                         history.save()
 
-        # # Deleting model 'AssetHistoryChange'
+        # Deleting model 'AssetHistoryChange'
         # db.delete_table('ralph_assets_assethistorychange')
 
         # # Deleting model 'LicenceHistoryChange'
@@ -90,7 +90,7 @@ class Migration(SchemaMigration):
 
     def backwards(self, orm):
         pass
-        # # Adding model 'AssetHistoryChange'
+        # Adding model 'AssetHistoryChange'
         # db.create_table('ralph_assets_assethistorychange', (
         #     ('comment', self.gf('django.db.models.fields.TextField')(null=True)),
         #     ('part_info', self.gf('django.db.models.fields.related.ForeignKey')(default=None, to=orm['ralph_assets.PartInfo'], null=True, on_delete=models.SET_NULL, blank=True)),

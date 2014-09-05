@@ -41,7 +41,9 @@ class HistoryListForModel(PaginateMixin, ContentTypeMixin, HistoryBase):
 
     def dispatch(self, request, *args, **kwargs):
         self.status = bool(request.GET.get('status', ''))
-        return super(HistoryListForModel, self).dispatch(request, *args, **kwargs)
+        return super(HistoryListForModel, self).dispatch(
+            request, *args, **kwargs
+        )
 
     def get_paginate_queryset(self):
         history = History.objects.get_history_for_this_content_type(
