@@ -71,6 +71,7 @@ asset_fieldset = lambda: OrderedDict([
         'order_no', 'invoice_date', 'invoice_no', 'price', 'provider',
         'deprecation_rate', 'source', 'request_date', 'provider_order_date',
         'delivery_date', 'deprecation_end_date', 'budget_info',
+        'force_deprecation',
     ]),
     ('User Info', [
         'user', 'owner', 'employee_id', 'company', 'department', 'manager',
@@ -165,9 +166,49 @@ LOOKUPS = {
 }
 
 
+class ReadOnlyFieldsMixin(object):
+    readonly_fields = ()
+
+    def __init__(self, *args, **kwargs):
+        super(ReadOnlyFieldsMixin, self).__init__(*args, **kwargs)
+        for field in (
+            field for name, field in self.fields.iteritems()
+            if name in self.readonly_fields
+        ):
+            field.widget.attrs['disabled'] = 'true'
+            field.required = False
+
+    def clean(self):
+        cleaned_data = super(ReadOnlyFieldsMixin, self).clean()
+        for field in self.readonly_fields:
+            cleaned_data[field] = getattr(self.instance, field)
+        return cleaned_data
+
+
 class MultivalFieldForm(ModelForm):
     """A form that has several multiline fields that need to have the
-    same number of entries."""
+    same number of entries.
+
+    :param multival_fields: list of form fields which require the same item
+    count
+    :param allow_duplicates: list of fields, if particular multivalue field
+    allows duplicates, append it to this list
+    """
+
+    multival_fields = []
+    allow_duplicates = []
+
+    def __init__(self, *args, **kwargs):
+        bad_fields = set(self.allow_duplicates).difference(
+            set(self.multival_fields)
+        )
+        if len(bad_fields):
+            raise Exception(
+                "This field(s) is(are) not multival_fields: {}".format(
+                    bad_fields,
+                )
+            )
+        super(MultivalFieldForm, self).__init__(*args, **kwargs)
 
     def different_multival_counters(self, cleaned_data):
         """Adds a validation error if if form's multivalues fields have
@@ -184,12 +225,14 @@ class MultivalFieldForm(ModelForm):
                     )
                     self.errors.setdefault(field, []).append(msg)
 
-    def unique_multival_fields(self, data):
+    def unique_multival_fields(self, request_data):
         for field_name in self.multival_fields:
+            if field_name in self.allow_duplicates:
+                continue
             try:
                 self[field_name].field.check_field_uniqueness(
                     self._meta.model,
-                    data.get(field_name, [])
+                    request_data.get(field_name, [])
                 )
             except ValidationError as err:
                 self._errors.setdefault(field_name, [])
@@ -407,8 +450,6 @@ class BulkEditAssetForm(DependencyForm, ModelForm):
     def _update_field_css_class(self, field_name):
         if field_name not in self.banned_fillables:
             classes = "span12 fillable"
-        elif field_name == 'support_void_reporting':
-            classes = ""
         else:
             classes = "span12"
         self.fields[field_name].widget.attrs.update({'class': classes})
@@ -797,9 +838,6 @@ class BaseAddAssetForm(DependencyAssetForm, AddEditAssetMixin, ModelForm):
             'slots',
             'source',
             'status',
-            'support_period',
-            'support_type',
-            'support_void_reporting',
             'task_url',
             'type',
             'user',
@@ -814,7 +852,6 @@ class BaseAddAssetForm(DependencyAssetForm, AddEditAssetMixin, ModelForm):
             'provider_order_date': DateWidget(),
             'remarks': Textarea(attrs={'rows': 3}),
             'request_date': DateWidget(),
-            'support_type': Textarea(attrs={'rows': 5}),
         }
     model = AutoCompleteSelectField(
         LOOKUPS['asset_model'],
@@ -968,9 +1005,6 @@ class BaseEditAssetForm(DependencyAssetForm, AddEditAssetMixin, ModelForm):
             'sn',
             'source',
             'status',
-            'support_period',
-            'support_type',
-            'support_void_reporting',
             'task_url',
             'type',
             'user',
@@ -987,7 +1021,6 @@ class BaseEditAssetForm(DependencyAssetForm, AddEditAssetMixin, ModelForm):
             'remarks': Textarea(attrs={'rows': 3}),
             'request_date': DateWidget(),
             'sn': Textarea(attrs={'rows': 1, 'readonly': '1'}),
-            'support_type': Textarea(attrs={'rows': 5}),
         }
     model = AutoCompleteSelectField(
         LOOKUPS['asset_model'],
@@ -1118,6 +1151,8 @@ class AddPartForm(BaseAddAssetForm, MultivalFieldForm):
         Add new part for device
     '''
 
+    multival_fields = ['sn']
+
     sn = MultilineField(
         db_field_path='sn', label=_('SN/SNs'), required=True,
         widget=Textarea(attrs={'rows': 25}),
@@ -1128,13 +1163,14 @@ class AddPartForm(BaseAddAssetForm, MultivalFieldForm):
         super(AddPartForm, self).__init__(*args, **kwargs)
         self.fieldsets = asset_fieldset()
         self.fieldsets['Basic Info'].remove('barcode')
-        self.multival_fields = ['sn']
 
 
 class AddDeviceForm(BaseAddAssetForm, MultivalFieldForm):
     '''
         Add new device form
     '''
+    multival_fields = ['sn', 'barcode', 'imei']
+
     sn = MultilineField(
         db_field_path='sn', label=_('SN/SNs'), required=False,
         widget=Textarea(attrs={'rows': 25}), validators=[validate_snbcs]
@@ -1149,10 +1185,6 @@ class AddDeviceForm(BaseAddAssetForm, MultivalFieldForm):
         widget=Textarea(attrs={'rows': 25}),
         validators=[validate_imeis],
     )
-
-    def __init__(self, *args, **kwargs):
-        super(AddDeviceForm, self).__init__(*args, **kwargs)
-        self.multival_fields = ['sn', 'barcode', 'imei']
 
     def clean(self):
         """
@@ -1246,11 +1278,13 @@ class EditDeviceForm(BaseEditAssetForm):
         return cleaned_data
 
 
-class BackOfficeEditDeviceForm(EditDeviceForm):
+class BackOfficeEditDeviceForm(ReadOnlyFieldsMixin, EditDeviceForm):
+
+    readonly_fields = ('created',)
 
     class Meta(BaseEditAssetForm.Meta):
         fields = BaseEditAssetForm.Meta.fields + (
-            'hostname',
+            'hostname', 'created',
         )
 
     hostname = CharField(
@@ -1268,6 +1302,7 @@ class BackOfficeEditDeviceForm(EditDeviceForm):
             ('sn', 'imei'),
             ('loan_end_date', 'purpose'),
             ('property_of', 'hostname'),
+            ('hostname', 'created'),
         ):
             self.fieldsets['Basic Info'].append(field)
             move_after(self.fieldsets['Basic Info'], after, field)
@@ -1562,8 +1597,7 @@ class SplitDevice(ModelForm):
         model = Asset
         fields = (
             'id', 'delete', 'model_proposed', 'model_user', 'invoice_no',
-            'order_no', 'sn', 'barcode', 'price', 'support_period',
-            'support_type', 'support_void_reporting', 'provider', 'source',
+            'order_no', 'sn', 'barcode', 'price', 'provider', 'source',
             'status', 'request_date', 'delivery_date', 'invoice_date',
             'provider_order_date', 'warehouse',
         )
@@ -1585,14 +1619,11 @@ class SplitDevice(ModelForm):
             'model_user', 'device_info', 'invoice_no', 'order_no',
             'request_date', 'delivery_date', 'invoice_date',
             'production_use_date', 'provider_order_date',
-            'provider_order_date', 'support_period', 'support_type',
-            'provider', 'source', 'status', 'warehouse',
+            'provider_order_date', 'provider', 'source', 'status', 'warehouse',
         ]
         for field_name in self.fields:
             if field_name in fillable_fields:
                 classes = "span12 fillable"
-            elif field_name == 'support_void_reporting':
-                classes = ""
             else:
                 classes = "span12"
             self.fields[field_name].widget.attrs = {'class': classes}

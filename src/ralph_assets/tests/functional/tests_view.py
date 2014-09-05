@@ -262,8 +262,14 @@ class TestDevicesView(ClientMixin, TestCase):
         })
         response = self.client.get(url)
         form = response.context['asset_form']
-        update_dict = form.__dict__['initial']
-        update_dict.update(**kwargs)
+        initial_dict = form.initial
+        update_dict = {}
+        for fieldset, fields in form.fieldsets.iteritems():
+            for field in fields:
+                val = initial_dict.get(field, None)
+                if val:
+                    update_dict[field] = val
+        update_dict.update(kwargs)
         response = self.client.post(url, update_dict, follow=True)
         return response, models_assets.Asset.objects.get(id=asset_id)
 
@@ -600,6 +606,40 @@ class TestBackOfficeDevicesView(TestDevicesView, BaseViewsTest):
     def test_mulitvalues_behaviour(self):
         self._test_mulitvalues_behaviour()
 
+    def test_save_without_changes(self):
+        """Assets must be the same values after dry save."""
+        original_asset = BOAssetFactory(force_deprecation=True)
+        exclude = [
+            'assethistorychange',
+            'attachments',
+            'cache_version',
+            'device',
+            'licence',
+            'created',
+            'modified',
+            'source_device',
+            'supports',
+            'support_void_reporting',
+            'support_period',
+            'transitionshistory',
+        ]
+
+        constant_fields = set(original_asset._meta.get_all_field_names())
+        constant_fields.difference_update(exclude)
+        response, asset = self.update_asset(
+            original_asset.id,
+            asset=True,
+        )
+        for field in constant_fields:
+            self.assertEqual(
+                getattr(original_asset, field),
+                getattr(asset, field),
+                'Value of field "{}" is diffrent after save! '
+                'Before: {}; after: {}'
+                .format(field, getattr(original_asset, field),
+                        getattr(asset, field))
+            )
+
 
 class TestLicencesView(BaseViewsTest):
     """This test case concern all licences views."""
@@ -734,7 +774,7 @@ class TestLicencesView(BaseViewsTest):
         """
         - get add license request data d1
 
-        - add licence with duplicated inv. nb. in data
+        - add licence with duplicated inv.-nb. in data
         - assert error occured
 
         - edit licence with duplicated sn in data
@@ -806,6 +846,24 @@ class TestLicencesView(BaseViewsTest):
                 'total': total,
             },
         )
+
+    def test_allow_duplicated_sns(self):
+        """
+        add license by factory with sn sn1
+        add by form with sn sn1
+        assert 200
+        """
+        existing_license = LicenceFactory()
+        license_data = self.get_license_form_data()
+        license_data.update({
+            'sn': existing_license.sn,
+            'parent': '',
+        })
+        add_license_url = reverse('add_licence')
+        response = self.client.post(
+            add_license_url, license_data, follow=True,
+        )
+        self.assertContains(response, '1 licences added')
 
 
 class TestSupportsView(BaseViewsTest):
@@ -1368,7 +1426,7 @@ class TestColumnsInSearch(BaseViewsTest):
             'Additional remarks', 'Barcode', 'Category', 'Dropdown',
             'Hostname', 'IMEI', 'Invoice date', 'Invoice no.', 'Manufacturer',
             'Model', 'Property of', 'SN', 'Service name', 'Status', 'Type',
-            'User', 'Warehouse',
+            'User', 'Warehouse', 'Created',
         ])
         mode = 'back_office'
         search_url = reverse('asset_search', kwargs={'mode': mode})
@@ -1391,6 +1449,7 @@ class TestColumnsInSearch(BaseViewsTest):
             'Dropdown', 'Inventory number', 'Invoice date', 'Invoice no.',
             'Licence Type', 'Manufacturer', 'Number of purchased items',
             'Property of', 'Software Category', 'Type', 'Used', 'Valid thru',
+            'Created',
         ])
         search_url = reverse('licence_list')
         self.check_cols_presence(search_url, correct_col_names, mode=None)
@@ -1399,7 +1458,7 @@ class TestColumnsInSearch(BaseViewsTest):
         DCSupportFactory()
         correct_col_names = set([
             'Dropdown', 'Type', 'Contract id', 'Name', 'Date from', 'Date to',
-            'Price',
+            'Price', 'Created',
         ])
         search_url = reverse('support_list')
         self.check_cols_presence(search_url, correct_col_names, mode=None)

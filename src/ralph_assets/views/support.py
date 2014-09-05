@@ -140,6 +140,12 @@ class SupportList(GenericSearch):
             field='price',
             sort_expression='price',
         ),
+        DataTableColumn(
+            _('Created'),
+            bob_tag=True,
+            field='created',
+            sort_expression='created',
+        ),
     ]
 
     def get_context_data(self, *args, **kwargs):
