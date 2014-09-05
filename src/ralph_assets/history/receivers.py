@@ -16,11 +16,8 @@ def post_save(sender, instance, **kwargs):
     context.end()
 
 
-def m2m_changed(sender, instance, action, reverse, model, pk_set, **kwargs):
-    print(action, pk_set)  # DETELE THIS
-    if not context.obj and pk_set and action in ['pre_clear', 'pre_add']:
-        context.start(
-            sender, instance, m2m=True, pk_set=pk_set, reverse=reverse
-        )
-    elif action == 'pre_add':
-        context.end()
+def m2m_changed(sender, instance, action, reverse, **kwargs):
+    if action in ('pre_clear',) and reverse:
+        instance.save_reverse_relation_history()
+    if action in ('post_add',) and not reverse:
+        instance.save_m2m_history()

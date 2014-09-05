@@ -114,12 +114,8 @@ class HistoryContext(object):
 
     @property
     def registry(self):
-        if self.m2m and self.model.in_history_m2m_registry:
-            from ralph_assets.history import registry_m2m
-            return registry_m2m
-        if not self.m2m and self.model.in_history_registry:
-            from ralph_assets.history import registry
-            return registry
+        from ralph_assets.history import registry
+        return registry
 
     def pre_save(self):
         self.pre_obj = None
@@ -161,13 +157,15 @@ class HistoryContext(object):
             elif isinstance(new_field, Model):
                 old_value = str(getattr(self.pre_obj, field))
                 new_value = str(getattr(self.obj, field))
-            diff_data.append(
-                {
-                    'field': field,
-                    'old': old_value,
-                    'new': new_value,
-                }
-            )
+
+            if str(old_value) != str(new_value):
+                diff_data.append(
+                    {
+                        'field': field,
+                        'old': old_value,
+                        'new': new_value,
+                    }
+                )
         History.objects.log_changes(self.obj, self.obj.saving_user, diff_data)
 
     def start(self, sender, obj, m2m=False, pk_set=set(), reverse=False):

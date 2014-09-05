@@ -74,7 +74,7 @@ class HistoryAssetsView(TestCase):
             'license_type': LicenseType.oem.id,
             'date_of_last_inventory': '2012-11-08',
             'last_logged_user': 'ralph',
-            'licences': [int(lic.pk) for lic in self.licences],
+            'licences': '|'.join([str(lic.pk) for lic in self.licences]),
         }
         self.dc_asset_params = self.asset_params.copy()
         self.dc_asset_params.update({
@@ -92,12 +92,17 @@ class HistoryAssetsView(TestCase):
         self.add_bo_device_asset()
         self.edit_bo_device_asset()
 
+    def convert_to_list_str(self, pipes):
+            if pipes == '':
+                return '[]'
+            return '[' + ', '.join(pipes.split('|')) + ']'
+
     def add_bo_device_asset(self):
         """Test check adding Asset into backoffice through the form UI"""
         url = '/assets/back_office/add/device/'
         attrs = self.bo_asset_params
-        request = self.client.post(url, attrs)
-        self.assertEqual(request.status_code, 302)
+        request = self.client.post(url, attrs, follow=True)
+        self.assertEqual(request.status_code, 200)
 
     def edit_bo_device_asset(self):
         """Test checks asset edition through the form UI"""
@@ -107,8 +112,8 @@ class HistoryAssetsView(TestCase):
             self.bo_asset_params.items() + self.asset_change_params.items()
         )
         attrs.update({'purpose': 2})
-        request = self.client.post(url, attrs)
-        self.assertEqual(request.status_code, 302)
+        request = self.client.post(url, attrs, follow=True)
+        self.assertEqual(request.status_code, 200)
 
     def test_change_status(self):
         """Test check the recording Asset status change in asset history"""
@@ -133,6 +138,33 @@ class HistoryAssetsView(TestCase):
             [asset_history.old_value, asset_history.new_value],
             [self.asset_params['barcode'], self.asset_change_params['barcode']]
         )
+
+    def test_change_licences(self):
+        """Test check the recording Asset licence set change
+        in asset history"""
+        asset_history = History.objects.get_history_for_this_object(
+            obj=self.asset
+        ).get(
+            field_name='licence_set'
+        )
+        self.assertListEqual(
+            [asset_history.old_value, asset_history.new_value],
+            [
+                self.convert_to_list_str(self.asset_params['licences']),
+                self.convert_to_list_str(self.asset_change_params['licences'])
+            ]
+        )
+
+        for licence in self.licences:
+            licence_history = History.objects.get_history_for_this_object(
+                obj=licence
+            ).get(
+                field_name='assets'
+            )
+            self.assertEqual(licence_history.old_value, '[]')
+            self.assertEqual(
+                licence_history.new_value, '[{}]'.format(self.asset.id)
+            )
 
     def test_change_required_support(self):
         asset = BOAssetFactory()

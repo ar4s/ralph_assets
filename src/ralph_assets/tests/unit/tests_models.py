@@ -165,42 +165,6 @@ class TestApiAssets(TestCase):
 
 
 class TestModelHistory(TestCase):
-    def test_dirty(self):
-        print('add from asset')  # DETELE THIS
-        asset = AssetFactory(pk=1111)
-        asset2 = AssetFactory(pk=2222)
-        licence = LicenceFactory(pk=888)
-        licence2 = LicenceFactory(pk=999)
-        asset.licence_set.add(licence)
-        asset.licence_set.add(licence2)
-        asset2.licence_set.add(licence, licence2)
-        # asset2.licence_set.add()
-        history_l = History.objects.get_history_for_this_object(obj=licence)
-        history_l2 = History.objects.get_history_for_this_object(obj=licence2)
-        history_a = History.objects.get_history_for_this_object(obj=asset)
-        history_a2 = History.objects.get_history_for_this_object(obj=asset2)
-        print('ha', history_a)  # DETELE THIS
-        print('ha2', history_a2)  # DETELE THIS
-        print('hl', history_l)  # DETELE THIS
-        print('hl2', history_l2)  # DETELE THIS
-        asset.delete()
-        licence.delete()
-
-
-        # print('\nadd from licence')  # DETELE THIS
-        # asset = AssetFactory(pk=123)
-        # asset2 = AssetFactory(pk=211)
-        # asset3 = AssetFactory(pk=311)
-        # licence = LicenceFactory(pk=888)
-        # licence.assets.add(asset, asset2)
-        # licence.assets.add(asset3)
-        # # licence.assets.add()
-        # history_l = History.objects.get_history_for_this_object(obj=licence)
-        # history_a = History.objects.get_history_for_this_object(obj=asset)
-        # history_a2 = History.objects.get_history_for_this_object(obj=asset2)
-        # print('ha', history_a)  # DETELE THIS
-        # print('ha2', history_a2)  # DETELE THIS
-        # print('hl', history_l)  # DETELE THIS
 
     def test_asset(self):
         asset = AssetFactory(pk=123)
@@ -228,10 +192,3 @@ class TestModelHistory(TestCase):
             asset = AssetFactory()
             licence.assets.add(asset)
             self.assertEqual(i + 1, history.count())
-
-    def test_licence(self):
-        pass
-            # asset_history = History.objects.get_history_for_this_object(
-            #     obj=asset
-            # )
-            # self.assertEqual(1, asset_history.count())
