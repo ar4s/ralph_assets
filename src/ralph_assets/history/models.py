@@ -20,7 +20,7 @@ from django.utils.translation import ugettext_lazy as _
 
 DEFAULT_HISTORY_FIELD_EXCLUDE = ('created', 'modified', 'invoice_date',
                                  'cache_version', 'rght', 'level', 'lft',
-                                 'tree_id')
+                                 'tree_id', 'loan_end_date')
 
 serializer = serializers.get_serializer("python")()
 
@@ -119,8 +119,8 @@ class HistoryMixin(object):
         from ralph_assets.history import registry, register
         if not registry.get(self.__class__, None):
             exclude = getattr(
-                self._meta,
-                'history_exclude',
+                self,
+                'exclude_fields_from_history',
                 DEFAULT_HISTORY_FIELD_EXCLUDE
             )
             register(self.__class__, exclude=exclude)

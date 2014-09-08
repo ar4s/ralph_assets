@@ -898,7 +898,6 @@ class PartInfo(TimeTrackable, SavingUser, SoftDeletable):
         self.save_comment = None
         self.saving_user = None
         super(PartInfo, self).__init__(*args, **kwargs)
-history.register(PartInfo, exclude=['created', 'modified', 'cache_version'])
 
 
 class ReportOdtSource(Named, SavingUser, TimeTrackable):
