@@ -2,14 +2,23 @@ $(document).ready(function () {
     var FORM_COUNT = parseInt($('input[name="form-TOTAL_FORMS"]').val());
 
     $('.add_row').on("click", function () {
-        var row = $('.form-split tbody tr').last().clone(true, true);
-        var row_html = $('#row-to-copy').html();
-        $('.form-split tbody').append(row_html)
-        change_form_counter('add');
-        renumber_forms();
-        bas = BobAjaxSelect.getInstance();
-        bas.register_in_element($('.form-split tbody tr').last());
-        return false;
+        var old_last = $('.form-split tbody tr').last();
+        if ($($('input:hidden', old_last)[2]).val() || !old_last.length) {
+            var row_html = $('#row-to-copy').html();
+            $('.form-split tbody').append(row_html)
+            change_form_counter('add');
+            renumber_forms();
+            var new_last = $('.form-split tbody tr').last();
+            bas = BobAjaxSelect.getInstance();
+            bas.register_in_element(new_last);
+            $('.results_on_deck', new_last).bind('added', function() {
+                var id = $($('input:hidden', new_last)[1])
+                if (id.val() == 0) {
+                    id.val('')
+                }
+            })
+            return false;
+        }
     });
 
     $("body").delegate(".form-split .delete_row", "click", function () {
@@ -20,10 +29,6 @@ $(document).ready(function () {
         change_form_counter('subtract');
         renumber_forms();
         return false;
-    });
-
-    $(".input, .uneditable-input").on("click", function () {
-        $(this).parent().next("td").find('input').val($(this).html());
     });
 
     function change_form_counter(action) {
@@ -37,6 +42,7 @@ $(document).ready(function () {
 
     function renumber_forms() {
         var form = $('.form-split tr');
+        var new_fields_counter = 0
         form.each(function (i, elem) {
             $(elem).find('input, select, span, div,').each(function (j, elem) {
                 var numberPattern = /\d+/g;
@@ -49,9 +55,12 @@ $(document).ready(function () {
                     $(elem).attr('id', id.replace(numberPattern, i - 1));
                 }
             });
-
+            var id = $($(elem).find('input')[1]);
+            if (id && id.val() == 0) {
+                new_fields_counter++;
+            }
         });
-
+        $('input[name="form-INITIAL_FORMS"]').val(FORM_COUNT - new_fields_counter);
         $('.ordinal').each(function (i, elem) {
             $(elem).html(i + 1);
         });

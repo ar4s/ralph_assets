@@ -26,7 +26,7 @@ from ralph_assets.tests.utils.assets import (
     ServiceCatalogFactory,
     WarehouseFactory,
 )
-from ralph_assets.tests.utils.sam import LicenceFactory
+from ralph_assets.tests.utils.licences import LicenceFactory
 from ralph.business.models import Venture
 from ralph.discovery.models_device import Device, DeviceType
 from ralph.ui.tests.global_utils import login_as_su

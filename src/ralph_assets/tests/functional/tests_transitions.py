@@ -26,7 +26,7 @@ from ralph_assets.tests.utils.assets import BOAssetFactory, WarehouseFactory
 from ralph_assets.tests.utils.transitions import (
     TransitionFactory, TransitionsHistoryFactory,
 )
-from ralph_assets.tests.utils.sam import LicenceFactory
+from ralph_assets.tests.utils.licences import LicenceFactory
 
 
 ASSETS_TRANSITIONS = {

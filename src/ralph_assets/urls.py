@@ -164,7 +164,7 @@ urlpatterns = patterns(
         name='delete_attachment',
     ),
     url(
-        r'users/$',
+        r'^users/$',
         login_required(UserList.as_view()),
         name='user_list',
     ),
@@ -194,11 +194,11 @@ urlpatterns = patterns(
         name='report_detail',
     ),
     url(
-        r'^licences/',
-        include('ralph_assets.licences.urls', app_name='licences'),
-    ),
-    url(
         r'^history/',
         include('ralph_assets.history.urls', app_name='history'),
+    ),
+    url(
+        r'^licences/',
+        include('ralph_assets.licences.urls', app_name='licences'),
     ),
 )

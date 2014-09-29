@@ -19,7 +19,7 @@ from ralph_assets.tests.utils import ReportOdtSourceFactory
 from ralph_assets.tests.utils.assets import (
     BOAssetFactory,
 )
-from ralph_assets.tests.utils.sam import LicenceFactory
+from ralph_assets.tests.utils.licences import LicenceFactory
 
 
 ASSETS_REPORTS_FOR_TESTS = {

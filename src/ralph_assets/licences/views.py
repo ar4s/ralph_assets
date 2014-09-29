@@ -13,15 +13,11 @@ from bob.data_table import DataTableColumn
 from django.contrib import messages
 from django.core.urlresolvers import reverse
 from django.db.models import Sum, Count
-from django.forms.models import formset_factory
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
+from django.utils.functional import cached_property
 
-from ralph_assets.forms_multi import (
-    AssetLicenceAssignForm,
-    UserLicenceAssignForm,
-)
+from ralph_assets.forms import LOOKUPS
 from ralph_assets.licences.forms import (
     SoftwareCategorySearchForm,
     LicenceSearchForm,
@@ -29,13 +25,13 @@ from ralph_assets.licences.forms import (
     EditLicenceForm,
     BulkEditLicenceForm,
 )
-from ralph_assets.views.base import SubmoduleModeMixin
-from ralph_assets.models_assets import MODE2ASSET_TYPE
 from ralph_assets.licences.models import (
     Licence,
     LicenceAsset,
+    LicenceUser,
     SoftwareCategory,
 )
+from ralph_assets.models_assets import MODE2ASSET_TYPE
 from ralph_assets.utils import assigned_formset_factory
 from ralph_assets.views.base import (
     AssetsBase,
@@ -199,7 +195,7 @@ class LicenceList(LicenseSelectedMixin, GenericSearch):
 
 class LicenceFormView(LicenceBaseView):
     """Base view that displays licence form."""
-    template_name = 'assets/add_licence.html'
+    template_name = 'assets/licences/add.html'
 
     def _get_form(self, data=None, **kwargs):
         self.form = self.Form(
@@ -307,62 +303,12 @@ class CountLicence(AjaxMixin, JsonResponseMixin, GenericSearch):
         return self.render_json_response(summary)
 
 
-class LicenceConnectionsView(SubmoduleModeMixin, AssetsBase):
-    template_name = 'assets/licence_connections.html'
-    submodule_name = 'licences'
-
-    def get(self, *args, **kwargs):
-        self.licence = Licence.objects.get(id=kwargs.get('licence_id'))
-        self.licence = get_object_or_404(
-            Licence.objects, id=kwargs.get('licence_id'),
-        )
-        return super(LicenceConnectionsView, self).get(*args, **kwargs)
-
-    def post(self, *args, **kwargs):
-        return super(LicenceConnectionsView, self).get(*args, **kwargs)
-
-    def prepare_formset(self, *args, **kwargs):
-        empty_formset = formset_factory(
-            form=AssetLicenceAssignForm, extra=1,
-        )(initial={})
-
-        AssetFormsetFactory = formset_factory(
-            form=AssetLicenceAssignForm, extra=2,
-        )
-        asset_connections_formset = AssetFormsetFactory(
-            initial={}, prefix='assets',
-        )
-        UserFormsetFactory = formset_factory(
-            form=UserLicenceAssignForm, extra=2,
-        )
-        user_connections_formset = UserFormsetFactory(
-            initial={}, prefix='users',
-        )
-
-        return {
-            'empty_formset': empty_formset,
-            'asset_connections_formset': asset_connections_formset,
-            'user_connections_formset': user_connections_formset,
-        }
-
-    def get_context_data(self, *args, **kwargs):
-        context = super(LicenceConnectionsView, self).get_context_data(
-            *args, **kwargs
-        )
-        context.update(self.prepare_formset())
-        context.update({
-            'licence': self.licence,
-            'caption': _('Edit Licence relations')
-        })
-        return context
-
-
 class AssginLicenceMixin(object):
-    template_name = 'assets/generic/assign_licence.html'
+    template_name = 'assets/licences/object_connections.html'
     base_model = None
 
     def get_object(self, *args, **kwargs):
-        raise NotImplementedError
+        raise NotImplementedError('Please override get_object method.')
 
     def get_base_model(self):
         if not self.base_model:
@@ -376,61 +322,92 @@ class AssginLicenceMixin(object):
                                       ' get_base_field method.')
         return self.base_field
 
-    def formset_save(self, obj):
-        raise NotImplementedError('Please override formset_valid method.')
+    @cached_property
+    def queryset(self):
+        query_kwargs = {self.obj.__class__.__name__.lower(): self.obj}
+        return self.get_base_model().objects.filter(**query_kwargs)
 
     def dispatch(self, request, *args, **kwargs):
-        obj = self.get_object(*args, **kwargs)
-        query_kwargs = {obj.__class__.__name__.lower(): obj}
-        queryset = self.get_base_model().objects.filter(**query_kwargs)
+        self.obj = self.get_object(*args, **kwargs)
+        data = None
+        if request.method.lower() == 'post':
+            data = request.POST
+        self.update_formset(data)
+
+        return super(AssginLicenceMixin, self).dispatch(
+            request, *args, **kwargs
+        )
+
+    def update_formset(self, data=None):
         self.empty_formset = assigned_formset_factory(
-            obj=obj,
+            obj=self.obj,
             base_model=self.get_base_model(),
             field=self.get_base_field(),
             lookup=self.lookup,
-        )(queryset=self.get_base_model().objects.none())
+        )(queryset=self.get_base_model().objects.none(), initial=[{'id': 0}])
 
         self.formset = assigned_formset_factory(
-            obj=obj,
+            obj=self.obj,
             base_model=self.get_base_model(),
             field=self.get_base_field(),
             lookup=self.lookup,
             extra=0
-        )(request.POST or None, queryset=queryset)
-        return super(AssginLicenceMixin, self).dispatch(
-            request, *args, **kwargs
-        )
+        )(data, queryset=self.queryset)
 
     def get_context_data(self, **kwargs):
         context = super(AssginLicenceMixin, self).get_context_data(**kwargs)
         context.update({
             'formset': self.formset,
             'empty_formset': self.empty_formset,
+            'obj': self.obj,
         })
         return context
 
     def post(self, request, *args, **kwargs):
         if self.formset.is_valid():
+            assigned_objs = set(self.queryset.values_list('id', flat=True))
+            formset_objs = []
+            for item in self.formset.cleaned_data:
+                if not item or not item.get('id', None):
+                    continue
+                formset_objs.append(item['id'].id)
+            diff = assigned_objs.difference(formset_objs)
             self.formset.save()
-            # self.formset_save(self.get_object(*args, **kwargs))
+            if diff:
+                self.get_base_model().objects.filter(id__in=diff).delete()
+            self.update_formset()
         return self.get(request, *args, **kwargs)
 
 
-from ralph_assets.forms import LOOKUPS
-
-
 class AssginAsset2Licence(AssginLicenceMixin, AssetsBase):
-    submodule_name = 'hardware'
+    submodule_name = 'licences'
     base_model = LicenceAsset
     base_field = 'asset'
     lookup = LOOKUPS['linked_device']
 
+    def get_context_data(self, **kwargs):
+        context = super(AssginAsset2Licence, self).get_context_data(**kwargs)
+        context.update({
+            'active_tab': 'assets',
+        })
+        return context
+
     def get_object(self, licence_id, *args, **kwargs):
         return Licence.objects.get(id=licence_id)
 
-    def formset_save(self, obj):
-        for data in self.formset.cleaned_data:
-            obj.assign(
-                data[self.base_field],
-                data['quantity'],
-            )
+
+class AssginUser2Licence(AssginLicenceMixin, AssetsBase):
+    submodule_name = 'licences'
+    base_model = LicenceUser
+    base_field = 'user'
+    lookup = LOOKUPS['asset_user']
+
+    def get_context_data(self, **kwargs):
+        context = super(AssginUser2Licence, self).get_context_data(**kwargs)
+        context.update({
+            'active_tab': 'users',
+        })
+        return context
+
+    def get_object(self, licence_id, *args, **kwargs):
+        return Licence.objects.get(id=licence_id)

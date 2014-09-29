@@ -12,6 +12,7 @@ from ralph_assets.licences.views import (
     CountLicence,
     EditLicence,
     AssginAsset2Licence,
+    AssginUser2Licence,
     LicenceList,
     LicenceBulkEdit,
     SoftwareCategoryList,
@@ -52,10 +53,15 @@ urlpatterns = patterns(
         name='edit_licence',
     ),
     url(
-        r'^edit/connections/asset/(?P<licence_id>[0-9]+)$',
+        r'^edit/(?P<licence_id>[0-9]+)/assets/$',
         AssginAsset2Licence.as_view(),
-        name='licence_connections',
-    )
+        name='licence_connections_assets',
+    ),
+    url(
+        r'^edit/(?P<licence_id>[0-9]+)/users/$',
+        AssginUser2Licence.as_view(),
+        name='licence_connections_users',
+    ),
 )
 
 ajax_urlpatterns = patterns(

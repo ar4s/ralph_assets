@@ -22,7 +22,7 @@ from ralph_assets.tests.utils.assets import (
     ServiceFactory,
 )
 from ralph_assets.tests.utils.supports import DCSupportFactory
-from ralph_assets.tests.utils.sam import LicenceFactory
+from ralph_assets.tests.utils.licences import LicenceFactory
 
 
 class TestModelAsset(TestCase):

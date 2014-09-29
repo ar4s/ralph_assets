@@ -6,11 +6,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from ajax_select.fields import (
-    AutoCompleteSelectField,
-    AutoCompleteSelectMultipleField,
-    AutoCompleteWidget,
-)
+from ajax_select.fields import AutoCompleteSelectField, AutoCompleteWidget
 from collections import OrderedDict
 from django import forms
 from django.forms import ChoiceField
@@ -87,7 +83,7 @@ class LicenceForm(forms.ModelForm):
             ('Basic info', [
                 'asset_type', 'manufacturer', 'licence_type',
                 'software_category', 'parent', 'niw', 'sn', 'property_of',
-                'valid_thru', 'assets', 'users', 'remarks', 'service_name',
+                'valid_thru', 'remarks', 'service_name',
                 'license_details',
             ]),
             ('Financial info', [
@@ -137,12 +133,6 @@ class LicenceForm(forms.ModelForm):
         plugin_options=dict(
             add_link='/admin/ralph_assets/budgetinfo/add/',
         )
-    )
-    assets = AutoCompleteSelectMultipleField(
-        LOOKUPS['linked_device'], required=False, label=_('Assigned Assets')
-    )
-    users = AutoCompleteSelectMultipleField(
-        LOOKUPS['asset_user'], required=False, label=_('Assigned Users')
     )
 
     def __init__(self, mode, *args, **kwargs):
@@ -226,7 +216,7 @@ class EditLicenceForm(ReadOnlyFieldsMixin, LicenceForm):
             ('Basic info', [
                 'asset_type', 'manufacturer', 'licence_type',
                 'software_category', 'parent', 'niw', 'sn', 'property_of',
-                'valid_thru', 'assets', 'users', 'remarks', 'service_name',
+                'valid_thru', 'remarks', 'service_name',
                 'license_details', 'created',
             ]),
             ('Financial info', [
@@ -238,7 +228,6 @@ class EditLicenceForm(ReadOnlyFieldsMixin, LicenceForm):
         fields = (
             'accounting_id',
             'asset_type',
-            'assets',
             'budget_info',
             'created',
             'invoice_date',
@@ -257,7 +246,6 @@ class EditLicenceForm(ReadOnlyFieldsMixin, LicenceForm):
             'service_name',
             'sn',
             'software_category',
-            'users',
             'valid_thru',
         )
 
@@ -325,15 +313,13 @@ class BulkEditLicenceForm(LicenceForm):
             'sn',
             'remarks',
             'budget_info',
-            'assets',
-            'users',
         )
     sn = forms.CharField(label=_('Licence key'))
     remarks = forms.CharField(label=_('Additional remarks'), required=False)
 
     def __init__(self, *args, **kwargs):
         super(BulkEditLicenceForm, self).__init__(None, *args, **kwargs)
-        banned_fillables = set(['niw', 'assets', 'users'])
+        banned_fillables = set(['niw', ])
         for field_name in self.fields:
             classes = "span12 fillable"
             if field_name in banned_fillables:
