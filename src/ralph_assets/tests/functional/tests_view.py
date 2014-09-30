@@ -1802,6 +1802,7 @@ class TestAssetAndDeviceLinkage(TestDevicesView, BaseViewsTest):
             "option to relink it.",
         )
 
+    @unittest.skip("until editing form has option 'link-by-barcode'")
     def test_editing_asset_doesnt_link_device_if_already_linked(self):
         """
         edit asset when:
