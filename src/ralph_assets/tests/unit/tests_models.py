@@ -10,6 +10,7 @@ from unittest import skip
 
 from django.test import TestCase
 
+from ralph.business.models import Venture
 from ralph.discovery.models_device import Device, DeviceType
 
 from ralph_assets.api_pricing import get_assets, get_asset_parts
@@ -54,14 +55,14 @@ class TestModelAsset(TestCase):
             deprecation_rate=50,
             deprecation_end_date=datetime.date(2014, 12, 15),
         )
-        dev1 = Device.create(
+        self.dev1 = Device.create(
             [('1', 'sda', 0)],
             model_name='xxx',
             model_type=DeviceType.rack_server,
             allow_stub=1,
         )
-        dev1.id = 666
-        dev1.save()
+        self.dev1.id = 666
+        self.dev1.save()
         dev2 = Device.create(
             [('1', 'dawdwad', 0)],
             model_name='Unknown',
@@ -91,6 +92,17 @@ class TestModelAsset(TestCase):
             self.asset_depr_date.is_deprecated(datetime.date(2014, 12, 20)),
             True,
         )
+
+    def test_venture(self):
+        venture = Venture.objects.create(name='v1')
+        self.dev1.venture = venture
+        self.dev1.save()
+
+        asset_without_device = AssetFactory(device_info=None)
+
+        self.assertEqual(self.asset.venture, venture)
+        self.assertEqual(self.asset2.venture, None)
+        self.assertEqual(asset_without_device.venture, None)
 
 
 class TestModelLicences(TestCase):
@@ -198,7 +210,6 @@ class TestApiAssets(TestCase):
             deprecation_rate=100,
             model=self.model,
         )
-
         part_info = PartInfo(device=self.asset)
         part_info.save()
         self.asset2 = AssetFactory(
@@ -210,6 +221,7 @@ class TestApiAssets(TestCase):
             deprecation_rate=50,
             model=self.model,
         )
+        self.stock_venture = Venture.objects.get(name='Stock')
 
     def tests_api_asset(self):
         date = datetime.date(2014, 03, 29)
@@ -226,7 +238,7 @@ class TestApiAssets(TestCase):
             )
             self.assertEqual(item['sn'], self.asset.sn)
             self.assertEqual(item['barcode'], self.asset.barcode)
-            self.assertEqual(item['venture_id'], None)
+            self.assertEqual(item['venture_id'], self.stock_venture.id)
             self.assertEqual(item['is_blade'], self.category.is_blade)
             self.assertEqual(item['cores_count'], self.asset.cores_count)
 
