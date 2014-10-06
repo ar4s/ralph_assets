@@ -9,8 +9,8 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         # Adding model 'LicenceAsset'
-        db.alter_column('ralph_assets_licence_assets', 'quantity', self.gf('django.db.models.fields.PositiveIntegerField')(default=1))
-        db.alter_column('ralph_assets_licence_users', 'quantity', self.gf('django.db.models.fields.PositiveIntegerField')(default=1))
+        db.add_column('ralph_assets_licence_assets', 'quantity', self.gf('django.db.models.fields.PositiveIntegerField')(default=1))
+        db.add_column('ralph_assets_licence_users', 'quantity', self.gf('django.db.models.fields.PositiveIntegerField')(default=1))
 
         # Adding unique constraint on 'LicenceAsset', fields ['licence', 'asset']
         db.create_unique(u'ralph_assets_licence_assets', ['licence_id', 'asset_id'])
