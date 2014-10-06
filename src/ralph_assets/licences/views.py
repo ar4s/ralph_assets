@@ -49,6 +49,97 @@ class LicenseSelectedMixin(object):
     submodule_name = 'licences'
 
 
+class AssginLicenceMixin(object):
+    template_name = 'assets/licences/object_connections.html'
+    base_model = None
+
+    def get_object(self, *args, **kwargs):
+        raise NotImplementedError('Please override get_object method.')
+
+    def get_base_model(self):
+        if not self.base_model:
+            raise NotImplementedError('Please specified base_model or override'
+                                      ' get_base_model method.')
+        return self.base_model
+
+    def get_base_field(self):
+        if not self.base_field:
+            raise NotImplementedError('Please specified base_field or override'
+                                      ' get_base_field method.')
+        return self.base_field
+
+    @cached_property
+    def queryset(self):
+        query_kwargs = {self.obj.__class__.__name__.lower(): self.obj}
+        return self.get_base_model().objects.filter(**query_kwargs)
+
+    def dispatch(self, request, *args, **kwargs):
+        self.obj = self.get_object(*args, **kwargs)
+        data = None
+        if request.method.lower() == 'post':
+            data = request.POST
+        self.update_formset(data)
+
+        return super(AssginLicenceMixin, self).dispatch(
+            request, *args, **kwargs
+        )
+
+    def update_formset(self, data=None):
+        self.empty_formset = assigned_formset_factory(
+            obj=self.obj,
+            base_model=self.get_base_model(),
+            field=self.get_base_field(),
+            lookup=self.lookup,
+        )(queryset=self.get_base_model().objects.none(), initial=[{'id': 0}])
+
+        self.formset = assigned_formset_factory(
+            obj=self.obj,
+            base_model=self.get_base_model(),
+            field=self.get_base_field(),
+            lookup=self.lookup,
+            extra=0
+        )(data, queryset=self.queryset)
+
+    def get_context_data(self, **kwargs):
+        context = super(AssginLicenceMixin, self).get_context_data(**kwargs)
+        context.update({
+            'formset': self.formset,
+            'empty_formset': self.empty_formset,
+            'obj': self.obj,
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if self.formset.is_valid():
+            assigned_objs = set(self.queryset.values_list('id', flat=True))
+            formset_objs = []
+            for item in self.formset.cleaned_data:
+                if not item or not item.get('id', None):
+                    continue
+                formset_objs.append(item['id'].id)
+            diff = assigned_objs.difference(formset_objs)
+            self.formset.save()
+            if diff:
+                self.get_base_model().objects.filter(id__in=diff).delete()
+            self.update_formset()
+            messages.success(request, _('Saved.'))
+        return self.get(request, *args, **kwargs)
+
+
+class AssginToLicenceBase(AssginLicenceMixin, AssetsBase):
+    submodule_name = 'licences'
+
+    def get_context_data(self, **kwargs):
+        context = super(AssginToLicenceBase, self).get_context_data(**kwargs)
+        context.update({
+            'active_tab': self.active_tab,
+        })
+        return context
+
+    def get_object(self, licence_id, *args, **kwargs):
+        return Licence.objects.get(id=licence_id)
+
+
 class LicenceBaseView(LicenseSelectedMixin, AssetsBase):
     pass
 
@@ -220,10 +311,6 @@ class LicenceFormView(LicenceBaseView):
             if licence.asset_type is None:
                 licence.asset_type = MODE2ASSET_TYPE[self.mode]
             licence.save()
-            # TODO: manually save attachments, users, assets
-            # save_m2m() doesn't support models where in many-to-many field
-            # is specified `through` attr
-            # self.form.save_m2m()
             messages.success(self.request, self.message)
             return HttpResponseRedirect(licence.url)
         except ValueError:
@@ -303,111 +390,15 @@ class CountLicence(AjaxMixin, JsonResponseMixin, GenericSearch):
         return self.render_json_response(summary)
 
 
-class AssginLicenceMixin(object):
-    template_name = 'assets/licences/object_connections.html'
-    base_model = None
-
-    def get_object(self, *args, **kwargs):
-        raise NotImplementedError('Please override get_object method.')
-
-    def get_base_model(self):
-        if not self.base_model:
-            raise NotImplementedError('Please specified base_model or override'
-                                      ' get_base_model method.')
-        return self.base_model
-
-    def get_base_field(self):
-        if not self.base_field:
-            raise NotImplementedError('Please specified base_field or override'
-                                      ' get_base_field method.')
-        return self.base_field
-
-    @cached_property
-    def queryset(self):
-        query_kwargs = {self.obj.__class__.__name__.lower(): self.obj}
-        return self.get_base_model().objects.filter(**query_kwargs)
-
-    def dispatch(self, request, *args, **kwargs):
-        self.obj = self.get_object(*args, **kwargs)
-        data = None
-        if request.method.lower() == 'post':
-            data = request.POST
-        self.update_formset(data)
-
-        return super(AssginLicenceMixin, self).dispatch(
-            request, *args, **kwargs
-        )
-
-    def update_formset(self, data=None):
-        self.empty_formset = assigned_formset_factory(
-            obj=self.obj,
-            base_model=self.get_base_model(),
-            field=self.get_base_field(),
-            lookup=self.lookup,
-        )(queryset=self.get_base_model().objects.none(), initial=[{'id': 0}])
-
-        self.formset = assigned_formset_factory(
-            obj=self.obj,
-            base_model=self.get_base_model(),
-            field=self.get_base_field(),
-            lookup=self.lookup,
-            extra=0
-        )(data, queryset=self.queryset)
-
-    def get_context_data(self, **kwargs):
-        context = super(AssginLicenceMixin, self).get_context_data(**kwargs)
-        context.update({
-            'formset': self.formset,
-            'empty_formset': self.empty_formset,
-            'obj': self.obj,
-        })
-        return context
-
-    def post(self, request, *args, **kwargs):
-        if self.formset.is_valid():
-            assigned_objs = set(self.queryset.values_list('id', flat=True))
-            formset_objs = []
-            for item in self.formset.cleaned_data:
-                if not item or not item.get('id', None):
-                    continue
-                formset_objs.append(item['id'].id)
-            diff = assigned_objs.difference(formset_objs)
-            self.formset.save()
-            if diff:
-                self.get_base_model().objects.filter(id__in=diff).delete()
-            self.update_formset()
-        return self.get(request, *args, **kwargs)
-
-
-class AssginAsset2Licence(AssginLicenceMixin, AssetsBase):
-    submodule_name = 'licences'
+class AssginAssetToLicence(AssginToLicenceBase):
+    active_tab = 'assets'
     base_model = LicenceAsset
     base_field = 'asset'
     lookup = LOOKUPS['linked_device']
 
-    def get_context_data(self, **kwargs):
-        context = super(AssginAsset2Licence, self).get_context_data(**kwargs)
-        context.update({
-            'active_tab': 'assets',
-        })
-        return context
 
-    def get_object(self, licence_id, *args, **kwargs):
-        return Licence.objects.get(id=licence_id)
-
-
-class AssginUser2Licence(AssginLicenceMixin, AssetsBase):
-    submodule_name = 'licences'
+class AssginUserToLicence(AssginToLicenceBase):
+    active_tab = 'users'
     base_model = LicenceUser
     base_field = 'user'
     lookup = LOOKUPS['asset_user']
-
-    def get_context_data(self, **kwargs):
-        context = super(AssginUser2Licence, self).get_context_data(**kwargs)
-        context.update({
-            'active_tab': 'users',
-        })
-        return context
-
-    def get_object(self, licence_id, *args, **kwargs):
-        return Licence.objects.get(id=licence_id)

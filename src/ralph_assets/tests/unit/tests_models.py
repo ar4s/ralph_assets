@@ -15,7 +15,7 @@ from ralph.discovery.models_device import Device, DeviceType
 
 from ralph_assets.api_pricing import get_assets, get_asset_parts
 from ralph_assets.models_assets import PartInfo
-from ralph_assets.licences.models import LicenceAsset, Licence
+from ralph_assets.licences.models import LicenceAsset, Licence, WrongModelError
 from ralph_assets.tests.utils.assets import (
     AssetSubCategoryFactory,
     AssetModelFactory,
@@ -134,7 +134,7 @@ class TestModelLicences(TestCase):
     def test_assign_asset_to_support(self):
         """Assign not supported object to licence."""
         asset = DCSupportFactory()
-        with self.assertRaises(Exception):
+        with self.assertRaises(WrongModelError):
             self.licence.assign(obj=asset)
 
     def test_assign_asset_to_licence_zero_quantity(self):
@@ -183,7 +183,7 @@ class TestModelLicences(TestCase):
         self.assertEqual(LicenceAsset.objects.all().count(), 0)
         self.assertEqual(self.licence.used, 0)
 
-    @skip('TODO')
+    @skip('TODO: implementation limit of licences')
     def test_reached_free_limit(self):
         """All licences is assigned."""
         asset = AssetFactory()
@@ -270,11 +270,13 @@ class TestModelHistory(TestCase):
 
         licence = LicenceFactory()
         history = licence.get_history()
+        # dry saves
         licence.save()
         licence.save()
         self.assertEqual(0, history.count())
-
         history = asset.get_history()
+
         for i in xrange(5):
+            self.assertEqual(i + 2, history.count())
             licence.assign(asset, i + 1)
             self.assertEqual(i + 3, history.count())

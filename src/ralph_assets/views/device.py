@@ -265,11 +265,10 @@ class EditDevice(HardwareModeMixin, SubmoduleModeMixin, AssetsBase):
                 self.asset.save(
                     user=self.request.user, force_unlink=force_unlink,
                 )
-                self.asset.licence_set.clear()
                 for licence in self.asset_form.cleaned_data.get(
                     'licences', []
                 ):
-                    Licence.objects.get(id=licence).assign(self.asset)
+                    Licence.objects.get(pk=licence).assign(self.asset)
                 self.asset.supports.clear()
                 for support in self.asset_form.cleaned_data.get(
                     'supports', []

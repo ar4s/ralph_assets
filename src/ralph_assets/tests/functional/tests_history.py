@@ -136,7 +136,7 @@ class HistoryAssetsView(TestCase):
     def test_change_licences(self):
         """Test check the recording Asset licence set change
         in asset history"""
-        asset_history = self.asset.get_history(field_name='licence_set')[0]
+        asset_history = self.asset.get_history(field_name='licences')[0]
         self.assertListEqual(
             [asset_history.old_value, asset_history.new_value],
             [

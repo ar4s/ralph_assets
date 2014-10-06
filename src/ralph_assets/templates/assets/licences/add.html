@@ -20,6 +20,7 @@
         {% form_as_fieldsets form %}
       </div>
       <div class="span6">
+        {% short_history licence %}
         {% include 'assets/attachment_table.html' with attachment_parent=licence parent_name='license' %}
       </div>
     </div>

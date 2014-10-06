@@ -644,7 +644,7 @@ class DependencyAssetForm(DependencyForm):
             initial = kwargs.setdefault('initial', {})
             initial['licences'] = [
                 licence['pk']
-                for licence in kwargs['instance'].licence_set.values('pk')
+                for licence in kwargs['instance'].licences.values('pk')
             ]
             initial['supports'] = [
                 support['pk']
@@ -1743,7 +1743,7 @@ class UserRelationForm(Form):
         initial = kwargs.setdefault('initial', {})
         initial['licences'] = [
             licence['pk']
-            for licence in user.licence_set.values('pk')
+            for licence in user.licences.values('pk')
         ]
         super(UserRelationForm, self).__init__(*args, **kwargs)
 

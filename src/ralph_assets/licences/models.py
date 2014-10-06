@@ -12,7 +12,6 @@ from django.db import models
 from django.db.models import Sum
 from django.db.models.loading import get_model
 from django.utils.functional import cached_property
-from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
 from lck.django.common.models import (
     Named,
@@ -39,6 +38,10 @@ from ralph_assets.models_util import WithForm
 from ralph_assets.history.models import History, HistoryMixin
 
 
+class WrongModelError(Exception):
+    pass
+
+
 class LicenceType(Named):
     """The type of a licence"""
     class Meta:
@@ -61,7 +64,7 @@ class SoftwareCategory(Named, CreatableFromString):
     @property
     def licences(self):
         """Iterate over licences."""
-        for licence in self.licence_set.all():
+        for licence in self.licences.all():
             yield licence
 
 
@@ -147,6 +150,7 @@ class Licence(
         Asset,
         verbose_name=_('Assigned Assets'),
         through='LicenceAsset',
+        related_name='licences',
     )
     users = models.ManyToManyField(
         User,
@@ -214,7 +218,7 @@ class Licence(
         name = obj._meta.object_name
         allowed_models = ('Asset', 'User')
         if name not in allowed_models:
-            raise Exception('{} model is not allowed.'.format(name))
+            raise WrongModelError('{} model is not allowed.'.format(name))
         Model = get_model(
             app_label='ralph_assets',
             model_name='Licence{}'.format(name)
@@ -230,15 +234,18 @@ class Licence(
             'licence': self,
         }
         assigned_licence, created = Model.objects.get_or_create(**kwargs)
+        old_quantity = assigned_licence.quantity
         assigned_licence.quantity = quantity
         assigned_licence.save(update_fields=['quantity'])
+        if not created and old_quantity == quantity:
+            return
         History.objects.log_changes(
             obj,
-            getattr(self, 'saving_user', None),
+            getattr(obj, 'saving_user', None),
             [
                 {
                     'field': 'assigned_licence_quantity',
-                    'old': '-' if created else assigned_licence.quantity,
+                    'old': '-' if created else old_quantity,
                     'new': quantity,
                 },
             ]
@@ -259,7 +266,7 @@ class Licence(
             return
         History.objects.log_changes(
             obj,
-            getattr(self, 'saving_user', None),
+            getattr(obj, 'saving_user', None),
             [
                 {
                     'field': 'assigned_licence_quantity',
@@ -298,26 +305,17 @@ class LicenceUser(models.Model):
 
     def __unicode__(self):
         return '{} of {} assigned to {}'.format(
-            self.quantity, self.user, self.asset
+            self.quantity, self.licence, self.asset
         )
 
 
 class BudgetInfoLookup(RestrictedLookupChannel):
     model = BudgetInfo
 
-    class Meta:
-        app_label = 'ralph_assets'
-
     def get_query(self, q, request):
         return BudgetInfo.objects.filter(
             name__icontains=q,
         ).order_by('name')[:10]
-
-    def get_result(self, obj):
-        return obj.name
-
-    def format_match(self, obj):
-        return self.format_item_display(obj)
 
     def format_item_display(self, obj):
         return "<span>{name}</span>".format(name=obj.name)
@@ -326,19 +324,7 @@ class BudgetInfoLookup(RestrictedLookupChannel):
 class SoftwareCategoryLookup(RestrictedLookupChannel):
     model = SoftwareCategory
 
-    class Meta:
-        app_label = 'ralph_assets'
-
     def get_query(self, q, request):
         return SoftwareCategory.objects.filter(
             name__icontains=q
         ).order_by('name')[:10]
-
-    def get_result(self, obj):
-        return obj.name
-
-    def format_match(self, obj):
-        return self.format_item_display(obj)
-
-    def format_item_display(self, obj):
-        return escape(obj.name)
