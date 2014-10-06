@@ -13,10 +13,10 @@ class Migration(SchemaMigration):
         db.add_column('ralph_assets_licence_users', 'quantity', self.gf('django.db.models.fields.PositiveIntegerField')(default=1))
 
         # Adding unique constraint on 'LicenceAsset', fields ['licence', 'asset']
-        db.create_unique(u'ralph_assets_licence_assets', ['licence_id', 'asset_id'])
+        # db.create_unique(u'ralph_assets_licence_assets', ['licence_id', 'asset_id'])
 
-        # Adding unique constraint on 'LicenceUser', fields ['licence', 'user']
-        db.create_unique(u'ralph_assets_licence_users', ['licence_id', 'user_id'])
+        # # Adding unique constraint on 'LicenceUser', fields ['licence', 'user']
+        # db.create_unique(u'ralph_assets_licence_users', ['licence_id', 'user_id'])
 
 
 
