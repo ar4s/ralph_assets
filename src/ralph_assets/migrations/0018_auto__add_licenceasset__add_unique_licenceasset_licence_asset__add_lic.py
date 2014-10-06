@@ -9,34 +9,15 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         # Adding model 'LicenceAsset'
-        db.create_table(u'ralph_assets_licence_assets', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('licence', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['ralph_assets.Licence'])),
-            ('asset', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['ralph_assets.Asset'])),
-            ('quantity', self.gf('django.db.models.fields.PositiveIntegerField')(default=1)),
-        ))
-        db.send_create_signal(u'ralph_assets', ['LicenceAsset'])
+        db.alter_column('ralph_assets_licence_assets', 'quantity', self.gf('django.db.models.fields.PositiveIntegerField')(default=1))
+        db.alter_column('ralph_assets_licence_users', 'quantity', self.gf('django.db.models.fields.PositiveIntegerField')(default=1))
 
         # Adding unique constraint on 'LicenceAsset', fields ['licence', 'asset']
         db.create_unique(u'ralph_assets_licence_assets', ['licence_id', 'asset_id'])
 
-        # Adding model 'LicenceUser'
-        db.create_table(u'ralph_assets_licence_users', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('licence', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['ralph_assets.Licence'])),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('quantity', self.gf('django.db.models.fields.PositiveIntegerField')(default=1)),
-        ))
-        db.send_create_signal(u'ralph_assets', ['LicenceUser'])
-
         # Adding unique constraint on 'LicenceUser', fields ['licence', 'user']
         db.create_unique(u'ralph_assets_licence_users', ['licence_id', 'user_id'])
 
-        # Removing M2M table for field users on 'Licence'
-        db.delete_table('ralph_assets_licence_users')
-
-        # Removing M2M table for field assets on 'Licence'
-        db.delete_table('ralph_assets_licence_assets')
 
 
     def backwards(self, orm):
@@ -46,27 +27,9 @@ class Migration(SchemaMigration):
         # Removing unique constraint on 'LicenceAsset', fields ['licence', 'asset']
         db.delete_unique(u'ralph_assets_licence_assets', ['licence_id', 'asset_id'])
 
-        # Deleting model 'LicenceAsset'
-        db.delete_table(u'ralph_assets_licence_assets')
+        db.delete_column('ralph_assets_licence_assets', 'quantity')
+        db.delete_column('ralph_assets_licence_users', 'quantity')
 
-        # Deleting model 'LicenceUser'
-        db.delete_table(u'ralph_assets_licence_users')
-
-        # Adding M2M table for field users on 'Licence'
-        db.create_table('ralph_assets_licence_users', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('licence', models.ForeignKey(orm['ralph_assets.licence'], null=False)),
-            ('user', models.ForeignKey(orm['auth.user'], null=False))
-        ))
-        db.create_unique('ralph_assets_licence_users', ['licence_id', 'user_id'])
-
-        # Adding M2M table for field assets on 'Licence'
-        db.create_table('ralph_assets_licence_assets', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('licence', models.ForeignKey(orm['ralph_assets.licence'], null=False)),
-            ('asset', models.ForeignKey(orm['ralph_assets.asset'], null=False))
-        ))
-        db.create_unique('ralph_assets_licence_assets', ['licence_id', 'asset_id'])
 
 
     models = {
