@@ -71,6 +71,9 @@ iso3_to_iso2 = {v: k for k, v in ISO_3166}
 
 def assigned_formset_factory(obj, base_model, field, lookup,
                              extra=1, extra_exclude=None):
+    """Factory return special assigned formset with lookup predefined
+    field and extra delete button.
+    """
     obj_class_name = obj.__class__.__name__.lower()
     if obj_class_name == field:
         raise Exception('Object class name and field value must be diffrent.')

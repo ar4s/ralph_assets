@@ -678,6 +678,7 @@ class TestBackOfficeDevicesView(TestDevicesView, BaseViewsTest):
             'cache_version',
             'device',
             'licence',
+            'licences',
             'licenceasset',
             'created',
             'modified',
@@ -887,26 +888,30 @@ class TestLicencesView(BaseViewsTest):
         )
 
     def test_licence_count_all(self):
-        licences = [LicenceFactory() for idx in xrange(5)]
+        licences_num = 5
+        assets_num = 5
+        users_num = 5
+        licences_per_object = 10
+        licences = [LicenceFactory() for idx in xrange(licences_num)]
         total = sum(Licence.objects.values_list(
             'number_bought', flat=True)
         )
         for lic in licences:
-            for _ in xrange(5):
+            for _ in xrange(assets_num):
                 asset = BOAssetFactory()
-                lic.assign(asset)
+                lic.assign(asset, licences_per_object)
         for lic in licences:
-            for _ in xrange(5):
+            for _ in xrange(users_num):
                 user = UserFactory()
-                lic.assign(user)
+                lic.assign(user, licences_per_object)
         url = reverse('count_licences')
         response = self.client.ajax_get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
+        self.assertDictEqual(
             json.loads(response.content),
             {
-                'used_by_users': 25,
-                'used_by_assets': 25,
+                'used_by_users': licences_num * assets_num * licences_per_object,  # noqa
+                'used_by_assets': licences_num * assets_num * licences_per_object,  # noqa
                 'total': total,
             },
         )

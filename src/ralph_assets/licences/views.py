@@ -12,7 +12,7 @@ from bob.data_table import DataTableColumn
 
 from django.contrib import messages
 from django.core.urlresolvers import reverse
-from django.db.models import Sum, Count
+from django.db.models import Sum
 from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import cached_property
@@ -373,7 +373,6 @@ class LicenceBulkEdit(BulkEditBase, LicenceBaseView):
 
 
 class CountLicence(AjaxMixin, JsonResponseMixin, GenericSearch):
-    mainmenu_selected = 'licences'  # required by AssetBase
     Model = Licence
     Form = LicenceSearchForm
 
@@ -381,12 +380,10 @@ class CountLicence(AjaxMixin, JsonResponseMixin, GenericSearch):
         self.form = self.Form(request.GET)
         qs = self.handle_search_data(request)
         summary = qs.aggregate(total=Sum('number_bought'))
-        summary.update(qs.annotate(assets_count=Count('assets')).aggregate(
-            used_by_assets=Sum('assets_count'),
-        ))
-        summary.update(qs.annotate(users_count=Count('users')).aggregate(
-            used_by_users=Sum('users_count'),
-        ))
+        summary.update(qs.aggregate(
+                       used_by_assets=Sum('licenceasset__quantity')))
+        summary.update(qs.aggregate(
+                       used_by_users=Sum('licenceuser__quantity')))
         return self.render_json_response(summary)
 
 

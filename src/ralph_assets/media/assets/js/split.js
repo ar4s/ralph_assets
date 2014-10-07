@@ -23,9 +23,7 @@ $(document).ready(function () {
 
     $("body").delegate(".form-split .delete_row", "click", function () {
         var row_count = $('.form-split tbody tr').length;
-        if (row_count > 1) {
-            $(this).parents('tr').remove();
-        }
+        $(this).parents('tr').remove();
         change_form_counter('subtract');
         renumber_forms();
         return false;

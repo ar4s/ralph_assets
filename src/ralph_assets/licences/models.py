@@ -203,8 +203,8 @@ class Licence(
 
     @cached_property
     def used(self):
-        assets_qs = self.assets.through.objects
-        users_qs = self.users.through.objects
+        assets_qs = self.assets.through.objects.filter(licence=self)
+        users_qs = self.users.through.objects.filter(licence=self)
 
         def get_sum(qs):
             return qs.aggregate(sum=Sum('quantity'))['sum'] or 0
@@ -284,7 +284,6 @@ class LicenceAsset(models.Model):
 
     class Meta:
         app_label = 'ralph_assets'
-        db_table = 'ralph_assets_licence_assets'
         unique_together = ('licence', 'asset')
 
     def __unicode__(self):
@@ -300,7 +299,6 @@ class LicenceUser(models.Model):
 
     class Meta:
         app_label = 'ralph_assets'
-        db_table = 'ralph_assets_licence_users'
         unique_together = ('licence', 'user')
 
     def __unicode__(self):

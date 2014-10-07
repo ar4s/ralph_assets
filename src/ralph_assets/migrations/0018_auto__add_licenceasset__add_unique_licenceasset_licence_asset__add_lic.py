@@ -8,29 +8,28 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'LicenceAsset'
-        db.add_column('ralph_assets_licence_assets', 'quantity', self.gf('django.db.models.fields.PositiveIntegerField')(default=1))
-        db.add_column('ralph_assets_licence_users', 'quantity', self.gf('django.db.models.fields.PositiveIntegerField')(default=1))
+        db.delete_unique(u'ralph_assets_licence_assets', ['licence_id', 'asset_id'])
+        db.rename_table('ralph_assets_licence_assets', 'ralph_assets_licenceasset')
+        db.add_column('ralph_assets_licenceasset', 'quantity',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(default=1))
+        db.create_unique(u'ralph_assets_licenceasset', ['licence_id', 'asset_id'])
 
-        # Adding unique constraint on 'LicenceAsset', fields ['licence', 'asset']
-        # db.create_unique(u'ralph_assets_licence_assets', ['licence_id', 'asset_id'])
-
-        # # Adding unique constraint on 'LicenceUser', fields ['licence', 'user']
-        # db.create_unique(u'ralph_assets_licence_users', ['licence_id', 'user_id'])
-
-
+        db.delete_unique(u'ralph_assets_licence_users', ['licence_id', 'user_id'])
+        db.rename_table('ralph_assets_licence_users', 'ralph_assets_licenceuser')
+        db.add_column('ralph_assets_licenceuser', 'quantity',
+                      self.gf('django.db.models.fields.PositiveIntegerField')(default=1))
+        db.create_unique(u'ralph_assets_licenceuser', ['licence_id', 'user_id'])
 
     def backwards(self, orm):
-        # Removing unique constraint on 'LicenceUser', fields ['licence', 'user']
-        db.delete_unique(u'ralph_assets_licence_users', ['licence_id', 'user_id'])
+        db.delete_column('ralph_assets_licenceasset', 'quantity')
+        db.delete_unique(u'ralph_assets_licenceasset', ['licence_id', 'asset_id'])
+        db.rename_table('ralph_assets_licenceasset', 'ralph_assets_licence_assets')
+        db.create_unique(u'ralph_assets_licence_assets', ['licence_id', 'asset_id'])
 
-        # Removing unique constraint on 'LicenceAsset', fields ['licence', 'asset']
-        db.delete_unique(u'ralph_assets_licence_assets', ['licence_id', 'asset_id'])
-
-        db.delete_column('ralph_assets_licence_assets', 'quantity')
-        db.delete_column('ralph_assets_licence_users', 'quantity')
-
-
+        db.delete_column('ralph_assets_licenceuser', 'quantity')
+        db.delete_unique(u'ralph_assets_licenceuser', ['licence_id', 'user_id'])
+        db.rename_table('ralph_assets_licenceuser', 'ralph_assets_licence_users')
+        db.create_unique(u'ralph_assets_licence_users', ['licence_id', 'user_id'])
 
     models = {
         'account.profile': {
@@ -370,7 +369,7 @@ class Migration(SchemaMigration):
             'valid_thru': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'})
         },
         u'ralph_assets.licenceasset': {
-            'Meta': {'unique_together': "((u'licence', u'asset'),)", 'object_name': 'LicenceAsset', 'db_table': "u'ralph_assets_licence_assets'"},
+            'Meta': {'unique_together': "((u'licence', u'asset'),)", 'object_name': 'LicenceAsset'},
             'asset': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['ralph_assets.Asset']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'licence': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['ralph_assets.Licence']"}),
@@ -382,7 +381,7 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '75', 'db_index': 'True'})
         },
         u'ralph_assets.licenceuser': {
-            'Meta': {'unique_together': "((u'licence', u'user'),)", 'object_name': 'LicenceUser', 'db_table': "u'ralph_assets_licence_users'"},
+            'Meta': {'unique_together': "((u'licence', u'user'),)", 'object_name': 'LicenceUser'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'licence': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['ralph_assets.Licence']"}),
             'quantity': ('django.db.models.fields.PositiveIntegerField', [], {'default': '1'}),

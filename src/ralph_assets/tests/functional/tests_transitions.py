@@ -243,7 +243,7 @@ class TestTransition(TestCase):
         self._base_test_transition_form_assign(url_params, {})
         self.assertEqual(
             Asset.objects.values(
-                'user', 'owner', 'loan_end_date', 'licence',
+                'user', 'owner', 'loan_end_date', 'licences',
             ).distinct().count(),
             1,
         )
