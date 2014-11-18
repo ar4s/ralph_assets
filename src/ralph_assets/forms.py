@@ -118,8 +118,7 @@ asset_search_back_office_fieldsets = lambda: OrderedDict([
 asset_search_dc_fieldsets = lambda: OrderedDict([
     ('Basic Info', {
         'noncollapsed': [
-            # 'rack',
-            'barcode', 'sn', 'model', 'manufacturer', 'warehouse',
+            'rack', 'barcode', 'sn', 'model', 'manufacturer', 'warehouse',
             'required_support', 'support_assigned', 'service',
             'device_environment', 'region',
         ],
@@ -1643,7 +1642,7 @@ class DataCenterSearchAssetForm(SearchAssetForm):
         super(DataCenterSearchAssetForm, self).__init__(*args, **kwargs)
         self.fieldsets = asset_search_dc_fieldsets()
 
-    # rack = CharField()
+    rack = CharField(required=False, label=_('Rack'))
 
     category = TreeNodeChoiceField(
         required=False,

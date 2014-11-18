@@ -64,7 +64,7 @@ class AssetsSearchQueryableMixin(object):
             'profit_center',
             'provider',
             'purpose',
-            # 'rack',
+            'rack',
             'ralph_device_id',
             'remarks',
             'required_support',
@@ -267,8 +267,9 @@ class AssetsSearchQueryableMixin(object):
                         )
                 elif field == 'region':
                     all_q &= Q(region__id=field_value)
-                elif field == 'rack':
-                    all_q &= Q(region__id=field_value)
+                # elif field == 'rack':
+                #     pass
+                    # all_q &= Q(device_environment__name=field_value)
                 else:
                     q = Q(**{field: field_value})
                     all_q = all_q & q
@@ -630,7 +631,8 @@ class AssetSearchDataTable(_AssetSearch, DataTableMixin):
                     field='ralph_device_id',
                     foreign_field_name='device_info',
                     export=True,
-                ), _(
+                ),
+                _(
                     'Rack',
                     field='rack',
                     foreign_field_name='device_info',

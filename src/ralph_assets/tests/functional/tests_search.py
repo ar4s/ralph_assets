@@ -39,6 +39,7 @@ class TestSearchForm(TestCase):
     2. Insert incorrect data
     """
     def setUp(self):
+        # import ipdb; ipdb.set_trace()
         self.client = login_as_su()
         self.first_asset = AssetFactory(
             invoice_no='Invoice No1',
@@ -846,24 +847,12 @@ class TestSearchEngine(TestCase):
             assets_count - 1,
         )
 
-    # def test_support_assignment(self):
-    #     DCAssetFactory()
-    #     DCAssetFactory(**dict(
-    #         supports=(supports.DCSupportFactory(),),
-    #     ))
+    # def test_rack_empty(self):
+    #     self._check_results_length(
+    #         self.testing_urls['dc'], 'rack', '', 0,
+    #     )
 
-    #     assets_count = Asset.objects.filter(
-    #         type=AssetType.data_center.id
-    #     ).count()
+    # def test_rack_contains(self):
     #     self._check_results_length(
-    #         self.testing_urls['dc'], 'support_assigned', '', assets_count,
-    #     )
-    #     self._check_results_length(
-    #         self.testing_urls['dc'], 'support_assigned', 'any', 1,
-    #     )
-    #     self._check_results_length(
-    #         self.testing_urls['dc'],
-    #         'support_assigned',
-    #         'none',
-    #         assets_count - 1,
+    #         self.testing_urls['dc'], 'rack', '', 0,
     #     )
