@@ -572,14 +572,14 @@ class TestSearchProductionUseDateFields(TestCase):
 
 class TestSearchEngine(TestCase):
     """General tests for search engine."""
-    def setUp(self):
-        self.client = login_as_su()
-        self.testing_urls = {
+    @classmethod
+    def setUpClass(cls):
+        cls.testing_urls = {
             'dc': reverse('asset_search', args=('dc',)),
             'bo': reverse('asset_search', args=('back_office',)),
         }
-        self.assets_dc = [AssetFactory() for _ in range(5)]
-        self.assets_bo = [BOAssetFactory() for _ in range(5)]
+        cls.assets_dc = [AssetFactory() for _ in range(5)]
+        cls.assets_bo = [BOAssetFactory() for _ in range(5)]
         for name in ['iPad 5 16 GB', 'ProLiant BL2x2d', 'WS-CBS312']:
             AssetFactory(model__name=name)
             BOAssetFactory(model__name=name)
@@ -594,8 +594,10 @@ class TestSearchEngine(TestCase):
             AssetFactory(barcode=unique, sn=unique, niw=unique)
         for unique in ['654321', '321654']:
             BOAssetFactory(barcode=unique, sn=unique, niw=unique)
+        cls.msg_error = 'Error in {}, request has return {} but expected {}.'
 
-        self.msg_error = 'Error in {}, request has return {} but expected {}.'
+    def setUp(self):
+        self.client = login_as_su()
 
     def _search_results(self, url, field_name=None, value=None):
         if field_name and value:
@@ -843,3 +845,25 @@ class TestSearchEngine(TestCase):
             'none',
             assets_count - 1,
         )
+
+    # def test_support_assignment(self):
+    #     DCAssetFactory()
+    #     DCAssetFactory(**dict(
+    #         supports=(supports.DCSupportFactory(),),
+    #     ))
+
+    #     assets_count = Asset.objects.filter(
+    #         type=AssetType.data_center.id
+    #     ).count()
+    #     self._check_results_length(
+    #         self.testing_urls['dc'], 'support_assigned', '', assets_count,
+    #     )
+    #     self._check_results_length(
+    #         self.testing_urls['dc'], 'support_assigned', 'any', 1,
+    #     )
+    #     self._check_results_length(
+    #         self.testing_urls['dc'],
+    #         'support_assigned',
+    #         'none',
+    #         assets_count - 1,
+    #     )

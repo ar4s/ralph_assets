@@ -64,6 +64,7 @@ class AssetsSearchQueryableMixin(object):
             'profit_center',
             'provider',
             'purpose',
+            # 'rack',
             'ralph_device_id',
             'remarks',
             'required_support',
@@ -265,6 +266,8 @@ class AssetsSearchQueryableMixin(object):
                             device_environment__name__icontains=field_value,
                         )
                 elif field == 'region':
+                    all_q &= Q(region__id=field_value)
+                elif field == 'rack':
                     all_q &= Q(region__id=field_value)
                 else:
                     q = Q(**{field: field_value})
