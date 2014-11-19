@@ -267,9 +267,8 @@ class AssetsSearchQueryableMixin(object):
                         )
                 elif field == 'region':
                     all_q &= Q(region__id=field_value)
-                # elif field == 'rack':
-                #     pass
-                    # all_q &= Q(device_environment__name=field_value)
+                elif field == 'rack':
+                    all_q &= Q(device_info__rack=field_value)
                 else:
                     q = Q(**{field: field_value})
                     all_q = all_q & q

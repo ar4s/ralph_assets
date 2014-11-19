@@ -18,6 +18,7 @@ from ralph.cmdb.tests.utils import (
 )
 from ralph_assets.tests.util import create_model
 from ralph_assets.tests.utils import licences
+from ralph_assets.licences.models import Licence
 from ralph_assets.tests.utils.assets import (
     AssetFactory,
     BOAssetFactory,
@@ -26,8 +27,10 @@ from ralph_assets.tests.utils.assets import (
 )
 from ralph_assets.models_assets import (
     Asset,
+    AssetModel,
     AssetType,
     AssetStatus,
+    Warehouse,
 )
 from ralph.ui.tests.global_utils import login_as_su
 from ralph_assets.tests.utils import supports
@@ -39,7 +42,6 @@ class TestSearchForm(TestCase):
     2. Insert incorrect data
     """
     def setUp(self):
-        # import ipdb; ipdb.set_trace()
         self.client = login_as_su()
         self.first_asset = AssetFactory(
             invoice_no='Invoice No1',
@@ -573,6 +575,11 @@ class TestSearchProductionUseDateFields(TestCase):
 
 class TestSearchEngine(TestCase):
     """General tests for search engine."""
+    msg_error = 'Error in {}, request has return {} but expected {}.'
+
+    def setUp(self):
+        self.client = login_as_su()
+
     @classmethod
     def setUpClass(cls):
         cls.testing_urls = {
@@ -582,23 +589,26 @@ class TestSearchEngine(TestCase):
         cls.assets_dc = [AssetFactory() for _ in range(5)]
         cls.assets_bo = [BOAssetFactory() for _ in range(5)]
         for name in ['iPad 5 16 GB', 'ProLiant BL2x2d', 'WS-CBS312']:
-            AssetFactory(model__name=name)
+            DCAssetFactory(model__name=name)
             BOAssetFactory(model__name=name)
 
         for manufacturer in ['Apple', 'Sony', 'Nikon', 'Sony Ericsson']:
             manu = AssetManufacturerFactory(name=manufacturer)
-            AssetFactory(model__manufacturer=manu)
+            DCAssetFactory(model__manufacturer=manu, device_info__rack=707)
             BOAssetFactory(model__manufacturer=manu)
             licences.LicenceFactory(manufacturer=manu)
 
         for unique in ['123456', '456123']:
-            AssetFactory(barcode=unique, sn=unique, niw=unique)
+            DCAssetFactory(barcode=unique, sn=unique, niw=unique)
         for unique in ['654321', '321654']:
             BOAssetFactory(barcode=unique, sn=unique, niw=unique)
-        cls.msg_error = 'Error in {}, request has return {} but expected {}.'
 
-    def setUp(self):
-        self.client = login_as_su()
+    @classmethod
+    def tearDownClass(cls):
+        Asset.objects.all().delete()
+        AssetModel.objects.all().delete()
+        Warehouse.objects.all().delete()
+        Licence.objects.all().delete()
 
     def _search_results(self, url, field_name=None, value=None):
         if field_name and value:
@@ -847,12 +857,17 @@ class TestSearchEngine(TestCase):
             assets_count - 1,
         )
 
-    # def test_rack_empty(self):
-    #     self._check_results_length(
-    #         self.testing_urls['dc'], 'rack', '', 0,
-    #     )
+    def test_rack_empty(self):
+        self._check_results_length(
+            self.testing_urls['dc'], 'rack', 'imaginary_rack', 0,
+        )
 
-    # def test_rack_contains(self):
-    #     self._check_results_length(
-    #         self.testing_urls['dc'], 'rack', '', 0,
-    #     )
+    def test_rack_exact(self):
+        self._check_results_length(
+            self.testing_urls['dc'], 'rack', '707', 4,
+        )
+
+    def test_rack_contains(self):
+        self._check_results_length(
+            self.testing_urls['dc'], 'rack', '07', 0,
+        )
