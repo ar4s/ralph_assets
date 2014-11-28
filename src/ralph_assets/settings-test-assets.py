@@ -1,6 +1,5 @@
-#
-# A testing profile.
-#
+"""A testing profile."""
+
 import os
 
 if os.environ.get('TEST_DATABASE_ENGINE') == 'travis_mysql':
