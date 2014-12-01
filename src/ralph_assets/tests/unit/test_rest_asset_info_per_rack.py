@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework.test import APIClient
 
+from ralph_assets.models_assets import Orientation
 from ralph_assets.tests.utils.assets import RackFactory, AssetFactory
 
 
@@ -42,11 +43,15 @@ class TestRestAssetInfoPerRack(TestCase):
                 ).content
             ),
             {
+                'id': self.rack_1.id,
+                'data_center': self.rack_1.data_center,
+                'server_room': self.rack_1.server_room,
                 'name': self.rack_1.name,
                 'max_u_height': self.rack_1.max_u_height,
                 'sides': [
                     {
                         'type': 'front',
+                        'type_id': Orientation.front.id,
                         'items': [
                             {
                                 'asset_id': self.asset_1.id,
@@ -74,6 +79,7 @@ class TestRestAssetInfoPerRack(TestCase):
                     },
                     {
                         'type': 'back',
+                        'type_id': Orientation.back.id,
                         'items': [
                             {
                                 'position': 1,

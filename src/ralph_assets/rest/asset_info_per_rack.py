@@ -69,15 +69,20 @@ class AssetInfoPerRackAPIView(ACLGateway, APIView):
             return results
 
         return Response({
+            "id": rack.id,
             "name": rack.name,
+            "data_center": rack.data_center and rack.data_center.id,
+            "server_room": rack.server_room and rack.server_room.id,
             "max_u_height": rack.max_u_height,
             "sides": [
                 {
                     "type": "front",
+                    "type_id": Orientation.front.id,
                     "items": get_side(Orientation.front),
                 },
                 {
                     "type": "back",
+                    "type_id": Orientation.back.id,
                     "items": get_side(Orientation.back),
                 }
             ]

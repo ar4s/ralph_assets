@@ -71,6 +71,7 @@ class AddDevice(HardwareModeMixin, SubmoduleModeMixin, AssetsBase):
                 self.additional_info = DeviceForm(
                     mode=self.mode,
                     exclude='create_stock',
+                    initial=self.request.GET.dict()
                 )
         elif self.mode == 'back_office':
             if self.request.method == 'POST':
