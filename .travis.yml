@@ -12,6 +12,9 @@ install:
 before_install:
     - pip install flake8 --use-mirrors
     - make flake
+before_script:
+  - npm install bower
+  - npm install jasmine
 script:
   make test-with-coveralls
 after_success:
