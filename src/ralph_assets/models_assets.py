@@ -219,6 +219,8 @@ class ModelVisualizationLayout(Choices):
 
     na = _('N/A')
     layout_1x2 = _('1x2').extra(css_class='rows-1 cols-2')
+    layout_2x4 = _('2x4').extra(css_class='rows-2 cols-4')
+    layout_2x6 = _('2x6').extra(css_class='rows-2 cols-6')
     layout_2x8 = _('2x8').extra(css_class='rows-2 cols-8')
     layout_2x8AB = _('2x16 (A/B)').extra(css_class='rows-2 cols-8 half-slots')
 
