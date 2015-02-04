@@ -587,6 +587,32 @@ class TestSearchProductionUseDateFields(TestCase):
         self.assertEqual(len(rows_from_table), 3)
 
 
+class TestAgg(TestCase):
+    def test_backwards_compatibility(self):
+        # import ipdb; ipdb.set_trace()
+        from django.db.models import Aggregate, F, Count
+        from django.db.models.sql.aggregates import Aggregate as SqlAggregate
+
+        class MySum(SqlAggregate):
+            sql_function = 'SUM'
+            sql_template = 'IFNULL(%(function)s(%(field)s), 0)'
+
+        class NewSum(Aggregate):
+            name = 'Sum'
+
+            def add_to_query(self, query, alias, col, source, is_summary):
+                # import ipdb; ipdb.set_trace()
+                # klass = getattr(query.aggregates_module, self.name)
+                klass = MySum
+                aggregate = klass(col, source=source, is_summary=is_summary, **self.extra)
+                query.aggregates[alias] = aggregate
+
+        DCAssetFactory()
+        qs = Asset.objects.values('id').annotate(another_age=NewSum('id'))
+        a = qs.get(pk=1)
+        self.assertEqual(a['another_age'], 68)
+
+
 class TestSearchEngine(TestCase):
     """General tests for search engine."""
     msg_error = 'Error in {}, request has return {} but expected {}.'

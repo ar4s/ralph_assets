@@ -130,45 +130,41 @@ class LinkedDeviceNameLookup(DeviceLookup):
         return item
 
 
+from django.db.models import Aggregate
+from django.db.models.sql import aggregates as sql_aggregates
+
+
+from django.db.models import Aggregate, F, Count
+from django.db.models.sql.aggregates import Aggregate as SqlAggregate
+
+class MySum(SqlAggregate):
+    sql_function = 'SUM'
+    sql_template = 'IFNULL(%(function)s(%(field)s), 0)'
+
+class NewSum(Aggregate):
+    name = 'Sum'
+
+    def add_to_query(self, query, alias, col, source, is_summary):
+        # import ipdb; ipdb.set_trace()
+        # klass = getattr(query.aggregates_module, self.name)
+        klass = MySum
+        aggregate = klass(col, source=source, is_summary=is_summary, **self.extra)
+        query.aggregates[alias] = aggregate
+
+
 class FreeLicenceLookup(RestrictedLookupChannel):
     """Lookup the licences that have any specimen left."""
 
     model = Licence
 
     def get_query(self, query, request):
-        expression = '%{}%'.format(query)
-        return self.model.objects.raw(
-            """SELECT
-                ralph_assets_licence.*,
-                ralph_assets_softwarecategory.name,
-                (
-                    COUNT(ralph_assets_licenceasset.asset_id)  +
-                    COUNT(ralph_assets_licenceuser.user_id)
-                ) AS used
-            FROM
-                ralph_assets_licence
-            INNER JOIN ralph_assets_softwarecategory ON (
-                ralph_assets_licence.software_category_id =
-                ralph_assets_softwarecategory.id
-            )
-            LEFT JOIN ralph_assets_licenceasset ON (
-                ralph_assets_licence.id =
-                ralph_assets_licenceasset.licence_id
-            )
-            LEFT JOIN ralph_assets_licenceuser ON (
-                ralph_assets_licence.id =
-                ralph_assets_licenceuser.licence_id
-            )
-            WHERE
-                ralph_assets_softwarecategory.name LIKE %s
-            OR
-                ralph_assets_licence.niw LIKE %s
-            GROUP BY ralph_assets_licence.id
-            HAVING used < ralph_assets_licence.number_bought
-            LIMIT 10;
-            """,
-            (expression, expression)
-        )
+        licences = Licence.objects.annotate(
+            assets_sum=NewSum('licenceasset__quantity'),
+            users_sum=NewSum('licenceuser__quantity')
+        ).filter(
+            number_bought__gt=F('assets_sum') + F('users_sum')
+        )[:10]
+        return licences
 
     def get_result(self, obj):
         return obj.id
