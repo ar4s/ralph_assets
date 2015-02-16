@@ -16,7 +16,7 @@ coverage:
 	coverage report
 
 flake:
-	flake8 --exclude="migrations" --statistics src/ralph_assets
+	flake8 --exclude="migrations" --statistics --ignore=W503 src/ralph_assets
 
 runserver:
 	ralph runserver
