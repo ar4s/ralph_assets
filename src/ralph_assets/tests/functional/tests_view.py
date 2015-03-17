@@ -196,6 +196,13 @@ class BaseViewsTest(ClientMixin, TransactionTestCase):
     client_class = AjaxClient
     password = 'ralph'
 
+    @classmethod
+    def generate_user():
+        user_admin = UserFactory(is_staff=True, is_superuser=True)
+        user_admin.set_password(self.password)
+        user_admin.save()
+        return user_admin
+
     def setUp(self):
         if not self.user_admin:
             print('*'*80, 'create_admin')  # DETELE THIS
@@ -223,7 +230,7 @@ class BaseViewsTest(ClientMixin, TransactionTestCase):
         form_data = {k: v for k, v in form_data.iteritems() if v is not None}
         return form_data
 
-BaseViewsTest.user_admin = None
+BaseViewsTest.instance = BaseViewsTest()
 
 
 class TestDataDisplay(ClientMixin, TestCase):
