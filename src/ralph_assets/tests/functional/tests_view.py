@@ -194,9 +194,15 @@ class TestRegions(object):
 
 class BaseViewsTest(ClientMixin, TransactionTestCase):
     client_class = AjaxClient
+    password = 'ralph'
 
     def setUp(self):
-        self.login_as_superuser()
+        if not self.user_admin:
+            print('*'*80, 'create_admin')  # DETELE THIS
+            self.user_admin = UserFactory(is_staff=True, is_superuser=True)
+            self.user_admin.set_password(self.password)
+            self.user_admin.save()
+        self.login_as_user(self.user_admin, password=self.password)
         super(BaseViewsTest, self).setUp()
 
     def _assert_field_in_form(self, form_url, fields_names):
@@ -216,6 +222,8 @@ class BaseViewsTest(ClientMixin, TransactionTestCase):
             form_data.update(response.context[form_name].__dict__['initial'])
         form_data = {k: v for k, v in form_data.iteritems() if v is not None}
         return form_data
+
+BaseViewsTest.user_admin = None
 
 
 class TestDataDisplay(ClientMixin, TestCase):
