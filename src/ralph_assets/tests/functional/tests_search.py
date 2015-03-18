@@ -307,6 +307,9 @@ class TestSearchInvoiceDateFields(TestCase):
 class TestSearchProviderDateFields(TestCase):
     def setUp(self):
         self.client = login_as_su()
+
+    @classmethod
+    def setUpClass(self):
         self.base_url = '/assets/dc/search'
 
         self.first_asset = AssetFactory(
