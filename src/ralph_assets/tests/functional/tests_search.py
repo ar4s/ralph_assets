@@ -233,6 +233,9 @@ class TestSearchForm(TestCase):
 class TestSearchInvoiceDateFields(TestCase):
     def setUp(self):
         self.client = login_as_su()
+
+    @classmethod
+    def setUpClass(self):
         self.first_asset = AssetFactory(
             invoice_date=datetime.date(2001, 1, 1),
             sn='1234-1234-1234-1234',
