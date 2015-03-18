@@ -9,6 +9,7 @@ import datetime
 import urllib
 
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
@@ -36,6 +37,11 @@ from ralph_assets.tests.utils import supports
 
 
 class BaseSearchTest(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        call_command('flush', interactive=False, verbosity=0)
+        super(BaseSearchTest, cls).tearDownClass()
+
     def setUp(self):
         self.client = login_as_su()
         self.testing_urls = {
@@ -50,15 +56,15 @@ class BaseSearchTest(TestCase):
         return response.context['bob_page'].paginator.object_list
 
 
-class TestSearchForm(TestCase):
+class TestSearchForm(BaseSearchTest):
     """Scenario:
     1. Tests all fields
     2. Insert incorrect data
     """
 
     @classmethod
-    def setUpClass(self):
-        self.first_asset = AssetFactory(
+    def setUpClass(cls):
+        cls.first_asset = AssetFactory(
             invoice_no='Invoice No1',
             order_no='Order No2',
             invoice_date=datetime.date(2001, 1, 1),
@@ -68,7 +74,7 @@ class TestSearchForm(TestCase):
             barcode='bc1',
         )
 
-        self.second_asset = AssetFactory(
+        cls.second_asset = AssetFactory(
             invoice_no='Invoice No2',
             order_no='Order No1',
             invoice_date=datetime.date(2001, 1, 1),
@@ -80,7 +86,7 @@ class TestSearchForm(TestCase):
 
         asset_model = create_model(name='Model2')
         asset_status = AssetStatus.used.id
-        self.third_asset = AssetFactory(
+        cls.third_asset = AssetFactory(
             model=asset_model,
             invoice_no='Invoice No1',
             order_no='Order No1',
@@ -230,23 +236,23 @@ class TestSearchForm(TestCase):
             self.assertNotEqual(part.part_info, None)
 
 
-class TestSearchInvoiceDateFields(TestCase):
+class TestSearchInvoiceDateFields(BaseSearchTest):
     def setUp(self):
         self.client = login_as_su()
 
     @classmethod
-    def setUpClass(self):
-        self.first_asset = AssetFactory(
+    def setUpClass(cls):
+        cls.first_asset = AssetFactory(
             invoice_date=datetime.date(2001, 1, 1),
             sn='1234-1234-1234-1234',
         )
 
-        self.second_asset = AssetFactory(
+        cls.second_asset = AssetFactory(
             invoice_date=datetime.date(2002, 1, 1),
             sn='1235-1235-1235-1235',
         )
 
-        self.third_asset = AssetFactory(
+        cls.third_asset = AssetFactory(
             invoice_date=datetime.date(2003, 1, 1),
             sn='1236-1236-1236-1236',
         )
@@ -304,25 +310,25 @@ class TestSearchInvoiceDateFields(TestCase):
         self.assertEqual(len(rows_from_table), 3)
 
 
-class TestSearchProviderDateFields(TestCase):
+class TestSearchProviderDateFields(BaseSearchTest):
     def setUp(self):
         self.client = login_as_su()
 
     @classmethod
-    def setUpClass(self):
-        self.base_url = '/assets/dc/search'
+    def setUpClass(cls):
+        cls.base_url = '/assets/dc/search'
 
-        self.first_asset = AssetFactory(
+        cls.first_asset = AssetFactory(
             provider_order_date=datetime.date(2001, 1, 1),
             sn='1234-1234-1234-1234',
         )
 
-        self.second_asset = AssetFactory(
+        cls.second_asset = AssetFactory(
             provider_order_date=datetime.date(2002, 1, 1),
             sn='1235-1235-1235-1235',
         )
 
-        self.third_asset = AssetFactory(
+        cls.third_asset = AssetFactory(
             provider_order_date=datetime.date(2003, 1, 1),
             sn='1236-1236-1236-1236',
         )
@@ -380,23 +386,23 @@ class TestSearchProviderDateFields(TestCase):
         self.assertEqual(len(rows_from_table), 3)
 
 
-class TestSearchDeliveryDateFields(TestCase):
+class TestSearchDeliveryDateFields(BaseSearchTest):
     def setUp(self):
         self.client = login_as_su()
 
     @classmethod
-    def setUpClass(self):
-        self.first_asset = AssetFactory(
+    def setUpClass(cls):
+        cls.first_asset = AssetFactory(
             delivery_date=datetime.date(2001, 1, 1),
             sn='1234-1234-1234-1234',
         )
 
-        self.second_asset = AssetFactory(
+        cls.second_asset = AssetFactory(
             delivery_date=datetime.date(2002, 1, 1),
             sn='1235-1235-1235-1235',
         )
 
-        self.third_asset = AssetFactory(
+        cls.third_asset = AssetFactory(
             delivery_date=datetime.date(2003, 1, 1),
             sn='1236-1236-1236-1236',
         )
@@ -454,23 +460,21 @@ class TestSearchDeliveryDateFields(TestCase):
         self.assertEqual(len(rows_from_table), 3)
 
 
-class TestSearchRequestDateFields(TestCase):
-    def setUp(self):
-        self.client = login_as_su()
+class TestSearchRequestDateFields(BaseSearchTest):
 
     @classmethod
-    def setUpClass(self):
-        self.first_asset = AssetFactory(
+    def setUpClass(cls):
+        cls.first_asset = DCAssetFactory(
             request_date=datetime.date(2001, 1, 1),
             sn='1234-1234-1234-1234',
         )
 
-        self.second_asset = AssetFactory(
+        cls.second_asset = DCAssetFactory(
             request_date=datetime.date(2002, 1, 1),
             sn='1235-1235-1235-1235',
         )
 
-        self.third_asset = AssetFactory(
+        cls.third_asset = DCAssetFactory(
             request_date=datetime.date(2003, 1, 1),
             sn='1236-1236-1236-1236',
         )
@@ -528,25 +532,25 @@ class TestSearchRequestDateFields(TestCase):
         self.assertEqual(len(rows_from_table), 3)
 
 
-class TestSearchProductionUseDateFields(TestCase):
+class TestSearchProductionUseDateFields(BaseSearchTest):
     def setUp(self):
         self.client = login_as_su()
 
     @classmethod
-    def setUpClass(self):
-        self.base_url = '/assets/dc/search'
+    def setUpClass(cls):
+        cls.base_url = '/assets/dc/search'
 
-        self.first_asset = AssetFactory(
+        cls.first_asset = DCAssetFactory(
             production_use_date=datetime.date(2001, 1, 1),
             sn='1234-1234-1234-1234',
         )
 
-        self.second_asset = AssetFactory(
+        cls.second_asset = DCAssetFactory(
             production_use_date=datetime.date(2002, 1, 1),
             sn='1235-1235-1235-1235',
         )
 
-        self.third_asset = AssetFactory(
+        cls.third_asset = DCAssetFactory(
             production_use_date=datetime.date(2003, 1, 1),
             sn='1236-1236-1236-1236',
         )
@@ -604,21 +608,9 @@ class TestSearchProductionUseDateFields(TestCase):
         self.assertEqual(len(rows_from_table), 3)
 
 
-class TestSearchEngine(TestCase):
+class TestSearchEngine(BaseSearchTest):
     """General tests for search engine."""
     msg_error = 'Error in {}, request has return {} but expected {}.'
-
-    def setUp(self):
-        self.client = login_as_su()
-        self.testing_urls = {
-            'dc': reverse('asset_search', args=('dc',)),
-            'bo': reverse('asset_search', args=('back_office',)),
-        }
-
-    @classmethod
-    def tearDownClass(cls):
-        from django.core.management import call_command
-        call_command('flush', interactive=False, verbosity=0)
 
     @classmethod
     def setUpClass(cls):
@@ -939,17 +931,17 @@ class TestSearchEngine(TestCase):
         )
 
 
-class TestDCLocationSearching(BaseSearchTest, TestCase):
+class TestDCLocationSearching(BaseSearchTest):
     @classmethod
-    def setUpClass(self):
-        self.asset_not_blade = DCAssetFactory(
+    def setUpClass(cls):
+        cls.asset_not_blade = DCAssetFactory(
             model__category__is_blade=False,
         )
-        self.asset_blade = DCAssetFactory(
+        cls.asset_blade = DCAssetFactory(
             model__category__is_blade=True,
             device_info__slot_no=2,
         )
-        self.asset_without_category = DCAssetFactory(model__category=None)
+        cls.asset_without_category = DCAssetFactory(model__category=None)
 
     def get_required_fields(self):
         return set(['data_center', 'server_room', 'rack', 'position'])
