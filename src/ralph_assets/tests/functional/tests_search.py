@@ -940,8 +940,8 @@ class TestSearchEngine(TestCase):
 
 
 class TestDCLocationSearching(BaseSearchTest, TestCase):
-    def setUp(self):
-        super(TestDCLocationSearching, self).setUp()
+    @classmethod
+    def setUpClass(self):
         self.asset_not_blade = DCAssetFactory(
             model__category__is_blade=False,
         )
