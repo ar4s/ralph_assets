@@ -55,8 +55,9 @@ class TestSearchForm(TestCase):
     1. Tests all fields
     2. Insert incorrect data
     """
-    def setUp(self):
-        self.client = login_as_su()
+
+    @classmethod
+    def setUpClass(self):
         self.first_asset = AssetFactory(
             invoice_no='Invoice No1',
             order_no='Order No2',
@@ -90,6 +91,9 @@ class TestSearchForm(TestCase):
             barcode='bc3',
             status=asset_status,
         )
+
+    def setUp(self):
+        self.client = login_as_su()
 
     def test_model_field(self):
         url = '/assets/dc/search?model=%s' % self.first_asset.model.name
