@@ -6,12 +6,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from django.forms import ValidationError
-from django.test import TestCase
+from django.test import SimpleTestCase
 
 from ralph_assets.admin import _greater_than_zero_validation
 
 
-class TestAdditionalValidators(TestCase):
+class TestAdditionalValidators(SimpleTestCase):
 
     def test_greater_than_zero_validation(self):
         self.assertRaises(
