@@ -54,8 +54,8 @@ class TestApiScrooge(TestCase):
             category=None
         )
         AssetModelFactory(type=models.AssetType.back_office)
-        result = [m for m in api_scrooge.get_models()]
-        self.assertEquals(result, [
+        result = set([m for m in api_scrooge.get_models()])
+        self.assertListEqual(result, [
             {
                 'model_id': model1.id,
                 'name': model1.name,

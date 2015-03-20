@@ -26,18 +26,20 @@ from ralph_assets.tests.utils.assets import (
 )
 from ralph.discovery.models import DeviceType
 from ralph.discovery.tests.util import DeviceModelFactory, DeviceFactory
+from ralph_assets.tests.utils import FlushMixin
 
 
-class AssetDevInfoPostSaveTest(TestCase):
+class AssetDevInfoPostSaveTest(FlushMixin, TestCase):
 
-    def setUp(self):
-        # core side
+    @classmethod
+    def setUpClass(self):
         self.dc_model = DeviceModelFactory(
             name="DC", type=DeviceType.data_center,
         )
         self.rack_model = DeviceModelFactory(
             name="Rack", type=DeviceType.rack,
         )
+        # core side
         self.dc_1 = DeviceFactory(name='DC1', sn='DC1', model=self.dc_model)
         self.dc_2 = DeviceFactory(name='DC2', sn='DC2', model=self.dc_model)
         self.rack_1_1 = DeviceFactory(
