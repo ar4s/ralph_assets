@@ -39,7 +39,7 @@ from ralph_assets.tests.utils import supports
 class BaseSearchTest(TestCase):
     @classmethod
     def tearDownClass(cls):
-        fixtue tear down
+        # fixtue tear down
         call_command('flush', interactive=False, verbosity=0)
         super(BaseSearchTest, cls).tearDownClass()
 
