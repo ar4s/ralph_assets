@@ -10,6 +10,7 @@ from functools import partial
 from factory import Sequence, SubFactory
 from factory.django import DjangoModelFactory, FileField
 
+from django.core.management import call_command
 from django.test.client import Client
 
 from ralph.ui.tests.global_utils import UserFactory
@@ -29,6 +30,13 @@ class AttachmentFactory(DjangoModelFactory):
 class AdminFactory(UserFactory):
     is_staff = True
     is_superuser = True
+
+
+class FlushMixin(object):
+    @classmethod
+    def tearDownClass(cls):
+        call_command('flush', interactive=False, verbosity=0)
+        super(FlushMixin, cls).tearDownClass()
 
 
 class MessagesTestMixin(object):

@@ -9,7 +9,6 @@ import datetime
 import urllib
 
 from django.contrib.auth.models import User
-from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
@@ -33,15 +32,10 @@ from ralph_assets.models_assets import (
 )
 from ralph.ui.tests.global_utils import login_as_su
 from ralph.util.tests.utils import RegionFactory
-from ralph_assets.tests.utils import supports
+from ralph_assets.tests.utils import FlushMixin, supports
 
 
-class BaseSearchTest(TestCase):
-    @classmethod
-    def tearDownClass(cls):
-        # fixtue tear down
-        call_command('flush', interactive=False, verbosity=0)
-        super(BaseSearchTest, cls).tearDownClass()
+class BaseSearchTest(FlushMixin, TestCase):
 
     def setUp(self):
         self.client = login_as_su()
