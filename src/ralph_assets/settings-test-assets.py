@@ -9,6 +9,7 @@ if os.environ.get('TEST_DATABASE_ENGINE') == 'mysql':
             'NAME': 'ralph',
             'USER': 'root',
             'HOST': 'localhost',
+            'PORT': 3307
         },
     }
 else:
