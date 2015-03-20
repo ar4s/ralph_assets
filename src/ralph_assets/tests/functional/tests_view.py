@@ -192,11 +192,38 @@ class TestRegions(object):
         self.assertEqual(response.status_code, 404)
 
 
-class BaseViewsTest(ClientMixin, TransactionTestCase):
+class Singleton(object):
+
+    __instance__ = None
+
+    def __new__(cls, *a, **kw):
+        if Singleton.__instance__ is None:
+            Singleton.__instance__ = object.__new__(cls, *a, **kw)
+            cls._Singleton__instance = Singleton.__instance__
+        return Singleton.__instance__
+
+    def _drop_it(self):
+        Singleton.__instance__ = None
+
+
+class BaseViewsTest(ClientMixin, TransactionTestCase, Singleton):
     client_class = AjaxClient
+    password = 'ralph'
+
+    @classmethod
+    def generate_user():
+        user_admin = UserFactory(is_staff=True, is_superuser=True)
+        user_admin.set_password(self.password)
+        user_admin.save()
+        return user_admin
 
     def setUp(self):
-        self.login_as_superuser()
+        if not self.user_admin:
+            print('*'*80, 'create_admin')  # DETELE THIS
+            self.user_admin = UserFactory(is_staff=True, is_superuser=True)
+            self.user_admin.set_password(self.password)
+            self.user_admin.save()
+        self.login_as_user(self.user_admin, password=self.password)
         super(BaseViewsTest, self).setUp()
 
     def _assert_field_in_form(self, form_url, fields_names):
