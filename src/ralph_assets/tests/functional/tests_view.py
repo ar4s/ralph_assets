@@ -210,19 +210,10 @@ class BaseViewsTest(ClientMixin, TransactionTestCase, Singleton):
     client_class = AjaxClient
     password = 'ralph'
 
-    @classmethod
-    def generate_user():
-        user_admin = UserFactory(is_staff=True, is_superuser=True)
-        user_admin.set_password(self.password)
-        user_admin.save()
-        return user_admin
-
     def setUp(self):
-        if not self.user_admin:
-            print('*'*80, 'create_admin')  # DETELE THIS
-            self.user_admin = UserFactory(is_staff=True, is_superuser=True)
-            self.user_admin.set_password(self.password)
-            self.user_admin.save()
+        self.user_admin = UserFactory(is_staff=True, is_superuser=True)
+        self.user_admin.set_password(self.password)
+        self.user_admin.save()
         self.login_as_user(self.user_admin, password=self.password)
         super(BaseViewsTest, self).setUp()
 
