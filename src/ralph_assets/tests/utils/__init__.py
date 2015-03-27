@@ -68,6 +68,10 @@ class AjaxClient(Client):
 
 
 class ClientMixin(object):
+    @classmethod
+    def setUpClass(cls):
+        cls.login_as_superuser()
+        super(ClientMixin, cls).setUpClass()
 
     def login_as_user(self, user=None, password='ralph', *args, **kwargs):
         if not user:

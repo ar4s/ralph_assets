@@ -8,15 +8,16 @@ from __future__ import unicode_literals
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
+from ralph_assets.tests.utils import ClientMixin
 from ralph.ui.tests.global_utils import login_as_su
 from ralph_assets.models_dc_assets import Rack
 from ralph_assets.tests.utils.assets import DataCenterFactory, RackFactory
 
 
-class TestRackForm(TestCase):
+class TestRackForm(ClientMixin, TestCase):
 
     def setUp(self):
-        self.client = login_as_su()
+        # self.client = login_as_su()
         self.dc_1 = DataCenterFactory(
             visualization_cols_num=10, visualization_rows_num=10,
         )
