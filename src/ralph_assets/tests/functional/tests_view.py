@@ -192,7 +192,7 @@ class TestRegions(object):
         self.assertEqual(response.status_code, 404)
 
 
-class BaseViewsTest(ClientMixin, TransactionTestCase, ):
+class BaseViewsTest(ClientMixin, TestCase):
     client_class = AjaxClient
     password = 'ralph'
 
