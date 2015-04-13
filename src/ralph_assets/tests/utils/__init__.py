@@ -68,8 +68,7 @@ class AjaxClient(Client):
 
 
 class ClientMixin(object):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(cls):
         cls.login_as_superuser()
         super(ClientMixin, cls).setUpClass()
 
