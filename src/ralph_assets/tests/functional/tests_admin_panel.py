@@ -9,7 +9,6 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 
 from ralph_assets.tests.utils import ClientMixin
-from ralph.ui.tests.global_utils import login_as_su
 from ralph_assets.models_dc_assets import Rack
 from ralph_assets.tests.utils.assets import DataCenterFactory, RackFactory
 
