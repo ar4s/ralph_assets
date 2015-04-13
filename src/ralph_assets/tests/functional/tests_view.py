@@ -16,6 +16,7 @@ from urllib import urlencode
 from dj.choices import Country
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import resolve, reverse
+from django.test import TestCase
 from django.test.utils import override_settings
 from ralph.account.models import Region
 from ralph.business.models import Venture
