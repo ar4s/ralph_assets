@@ -27,7 +27,6 @@ from lck.django.common.models import (
     SoftDeletable,
     TimeTrackable,
     WithConcurrentGetOrCreate,
-    ViewableSoftDeletableManager,
 )
 
 from mptt.fields import TreeForeignKey
@@ -57,6 +56,7 @@ from ralph.util.models import SyncFieldMixin
 from ralph_assets.models_util import (
     Regionalized,
     RegionalizedDBManager,
+    SoftDeletableRegionalizedDBManager,
 )
 from ralph_assets.utils import iso2_to_iso3
 from ralph_assets.models_dc_assets import (  # noqa
@@ -395,14 +395,14 @@ def _get_file_path(instance, filename):
     return os.path.join('assets', filename)
 
 
-class BOAdminManager(models.Manager):
+class BOAdminManager(RegionalizedDBManager):
     def get_query_set(self):
         return super(BOAdminManager, self).get_query_set().filter(
             type__in=(AssetType.BO.choices)
         )
 
 
-class DCAdminManager(models.Manager):
+class DCAdminManager(RegionalizedDBManager):
     def get_query_set(self):
         return super(DCAdminManager, self).get_query_set().filter(
             type__in=(AssetType.DC.choices)
@@ -413,15 +413,15 @@ class AssetAdminManager(RegionalizedDBManager):
     pass
 
 
-class BOManager(
-    BOAdminManager, ViewableSoftDeletableManager, RegionalizedDBManager
-):
+class AssetManager(SoftDeletableRegionalizedDBManager):
     pass
 
 
-class DCManager(
-    DCAdminManager, ViewableSoftDeletableManager, RegionalizedDBManager
-):
+class BOManager(BOAdminManager, AssetManager):
+    pass
+
+
+class DCManager(DCAdminManager, AssetManager):
     pass
 
 
@@ -657,6 +657,7 @@ class Asset(
     admin_objects_bo = BOAdminManager()
     objects_dc = DCManager()
     objects_bo = BOManager()
+    objects = AssetManager()
     task_url = models.URLField(
         max_length=2048, null=True, blank=True, unique=False,
         help_text=('External workflow system URL'),
